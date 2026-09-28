@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Radio Italiane — ascolta le radio in diretta</title>
+<meta name="description" content="180 radio italiane in diretta: pop, rock, dance, news, sport e regionali. Player semplice, senza registrazione.">
+<style>
+  :root{
+    --bg:#ffffff; --soft:#f6f6f7; --line:#e7e7ea; --line2:#dedee3;
+    --ink:#15171c; --ink2:#3d424c; --muted:#767b87; --red:#d0021b; --red-d:#a80115;
+    --green:#0a8a4f; --bar:#16181d; --radius:10px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+       -webkit-font-smoothing:antialiased;padding-bottom:96px}
+  a{color:inherit}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 18px}
+  button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+  input,select{font:inherit}
+
+  /* ── header ───────────────────────────────────────────── */
+  header{background:var(--bg);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:30}
+  .top{display:flex;align-items:center;gap:18px;height:62px}
+  .logo{display:flex;align-items:center;gap:9px;font-weight:800;font-size:17px;letter-spacing:-.3px;white-space:nowrap}
+  .logo i{width:26px;height:26px;border-radius:5px;background:var(--red);color:#fff;display:grid;place-items:center;
+          font-style:normal;font-size:14px;font-weight:800}
+  .logo span{font-weight:500;color:var(--muted)}
+  .search{flex:1;max-width:420px;display:flex;align-items:center;gap:8px;border:1px solid var(--line2);border-radius:8px;
+          padding:0 11px;height:38px;background:var(--soft)}
+  .search:focus-within{background:#fff;border-color:var(--red)}
+  .search svg{width:15px;height:15px;fill:var(--muted);flex:none}
+  .search input{flex:1;border:0;background:none;outline:none;font-size:14.5px;min-width:0}
+  .now{margin-left:auto;text-align:right;font-variant-numeric:tabular-nums;line-height:1.15}
+  .now b{font-size:15px;font-weight:700}
+  .now small{display:block;color:var(--muted);font-size:12px}
+
+  /* ── categorie ────────────────────────────────────────── */
+  nav.cats{border-top:1px solid var(--line);background:var(--bg)}
+  .tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{padding:11px 12px;border-bottom:2px solid transparent;white-space:nowrap;font-size:14px;color:var(--ink2);
+       font-weight:500;margin-bottom:-1px}
+  .tab:hover{color:var(--red)}
+  .tab.on{color:var(--red);border-bottom-color:var(--red);font-weight:700}
+  .tab em{font-style:normal;color:var(--muted);font-size:12.5px;margin-left:5px}
+
+  /* ── barra risultati ──────────────────────────────────── */
+  .results{display:flex;align-items:baseline;gap:12px;margin:20px 0 8px;flex-wrap:wrap}
+  .results h2{margin:0;font-size:16px;font-weight:700}
+  .results p{margin:0;color:var(--muted);font-size:13px}
+  .results .filters{margin-left:auto;display:flex;gap:14px;font-size:13px}
+  .results .filters button{color:var(--muted);border-bottom:1px solid transparent}
+  .results .filters button:hover{color:var(--ink)}
+  .results .filters button.on{color:var(--red);border-bottom-color:var(--red)}
+
+  /* ── griglia stazioni ─────────────────────────────────── */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:14px;margin:14px 0 8px}
+  .st{position:relative;border:1px solid var(--line);border-radius:var(--radius);padding:16px 12px 14px;text-align:center;
+      background:#fff;transition:border-color .12s,box-shadow .12s;cursor:pointer}
+  .st:hover{border-color:var(--line2);box-shadow:0 3px 12px rgba(20,23,28,.07)}
+  .st.on{border-color:var(--red);box-shadow:0 0 0 1px var(--red) inset}
+  .st .bx{position:relative;width:86px;height:86px;margin:0 auto 11px}
+  .st .bx .mono{position:absolute;inset:0;border-radius:8px;display:grid;place-items:center;color:#fff;font-weight:700;
+                letter-spacing:-.5px;font-size:24px;background:#5b6270;overflow:hidden}
+  .st .bx .mono.s3{font-size:19px}.st .bx .mono.s4{font-size:15px}
+  .st .bx img{position:absolute;inset:0;width:86px;height:86px;object-fit:contain;background:#fff;border-radius:8px}
+  .st .bx img.off{display:none}
+  .st .nm{font-size:14px;font-weight:600;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;
+          -webkit-box-orient:vertical;min-height:36px}
+  .st .gn{color:var(--muted);font-size:12px;margin-top:5px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .st .kbps{color:#9aa0ac;font-size:11px;margin-top:3px;letter-spacing:.02em}
+  .st .heart{position:absolute;top:7px;right:7px;width:26px;height:26px;border-radius:6px;display:grid;place-items:center;
+             color:#c9ccd3;opacity:0;transition:opacity .12s}
+  .st:hover .heart,.st .heart.on{opacity:1}
+  .st .heart svg{width:15px;height:15px;fill:currentColor}
+  .st .heart.on{color:var(--red)}
+  .st .onair{position:absolute;top:9px;left:9px;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+             color:var(--red);display:none;align-items:center;gap:4px}
+  .st.on .onair{display:flex}
+  .st .onair i{width:6px;height:6px;border-radius:50%;background:var(--red);animation:blip 1.3s infinite}
+  @keyframes blip{0%,100%{opacity:1}50%{opacity:.25}}
+  .empty{grid-column:1/-1;text-align:center;color:var(--muted);padding:40px 0}
+  .tdot{position:absolute;right:9px;bottom:9px;width:7px;height:7px;border-radius:50%;display:none}
+  .tdot.on{display:block}
+  .tdot.ok{background:var(--green)}.tdot.fail{background:var(--red)}.tdot.run{background:#c3c7ce}
+  .tdot.maybe{background:#c98a00}
+
+  /* ── sezioni secondarie ───────────────────────────────── */
+  .band{border-top:1px solid var(--line);margin-top:28px;padding-top:22px}
+  .band h3{margin:0 0 10px;font-size:14px;font-weight:700}
+  .recent{display:flex;flex-wrap:wrap;gap:8px}
+  .recent button{border:1px solid var(--line);border-radius:7px;padding:7px 11px;font-size:13px;color:var(--ink2)}
+  .recent button:hover{border-color:var(--red);color:var(--red)}
+
+  details{background:var(--soft);border:1px solid var(--line);border-radius:var(--radius);padding:0 14px;margin-top:12px}
+  details summary{cursor:pointer;font-weight:600;font-size:14px;padding:12px 0;list-style:none;display:flex;align-items:center;gap:8px}
+  details summary::-webkit-details-marker{display:none}
+  details summary::after{content:"+";margin-left:auto;color:var(--muted);font-weight:400}
+  details[open] summary::after{content:"–"}
+  details .in{padding:0 0 14px;color:var(--ink2);font-size:13.5px;line-height:1.65}
+  details .in p{margin:0 0 9px}
+  details .in ul{margin:0 0 9px;padding-left:20px}
+  details .in li{margin:3px 0}
+  code{background:#eceef1;border-radius:4px;padding:1px 5px;font-size:12.5px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
+  .btn{border:1px solid var(--line2);background:#fff;border-radius:7px;padding:8px 13px;font-size:13.5px;font-weight:600}
+  .btn:hover{border-color:var(--red);color:var(--red)}
+  .btn[disabled]{opacity:.45;cursor:default}
+  .log{background:#fff;border:1px solid var(--line);border-radius:8px;padding:9px 11px;max-height:210px;overflow:auto;
+       font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11.5px;line-height:1.6;color:var(--ink2);white-space:pre-wrap}
+  .log .e{color:var(--red)}.log .w{color:#a15a00}.log .s{color:var(--green)}.log .d{color:var(--muted)}
+  .sum{font-size:13px;margin:9px 0;color:var(--ink2)}
+  .sum b{color:var(--green)}
+  footer{border-top:1px solid var(--line);margin-top:28px;padding:18px 0 30px;color:var(--muted);font-size:12.5px;line-height:1.6}
+
+  /* ── banner ───────────────────────────────────────────── */
+  .banner{display:none;border:1px solid #f0c48a;background:#fdf6e9;color:#7a4a00;border-radius:var(--radius);
+          padding:11px 14px;font-size:13.5px;margin:14px 0 0;line-height:1.55}
+  .banner.show{display:block}
+  .banner strong{color:#5e3900}
+  .banner ol{margin:7px 0 0;padding-left:20px}
+
+  /* ── player in basso ──────────────────────────────────── */
+  .player{position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--bar);color:#fff;
+          box-shadow:0 -4px 20px rgba(0,0,0,.18)}
+  .prow{display:flex;align-items:center;gap:13px;height:74px}
+  .plogo{width:46px;height:46px;border-radius:7px;flex:none;position:relative;background:#2a2e37;overflow:hidden}
+  .plogo .mono{position:absolute;inset:0;display:grid;place-items:center;font-weight:700;font-size:15px;background:#3a3f4a;
+               color:#fff;letter-spacing:-.5px}
+  .plogo .mono.s4{font-size:11px}.plogo .mono.s3{font-size:12px}
+  .plogo img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#fff}
+  .plogo img.off{display:none}
+  .pmeta{min-width:0;flex:1 1 200px}
+  .pmeta b{display:block;font-size:14.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pmeta span{display:block;color:#9aa1ad;font-size:12.5px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ico{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:#d5d9e0;flex:none}
+  .ico:hover{background:#252932;color:#fff}
+  .ico svg{width:17px;height:17px;fill:currentColor}
+  .ico.wide{width:auto;border-radius:7px;padding:0 11px;height:34px;font-size:12.5px;font-weight:600;border:1px solid #333843}
+  .play{width:46px;height:46px;border-radius:50%;background:var(--red);display:grid;place-items:center;flex:none}
+  .play:hover{background:var(--red-d)}
+  .play svg{width:19px;height:19px;fill:#fff}
+  .vol{display:flex;align-items:center;gap:7px;flex:0 1 150px;min-width:96px}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:4px;background:#3a3f4a;outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:#fff;cursor:pointer}
+  input[type=range]::-moz-range-thumb{width:13px;height:13px;border:0;border-radius:50%;background:#fff;cursor:pointer}
+  select{background:#22262e;color:#fff;border:1px solid #333843;border-radius:7px;height:34px;padding:0 8px;font-size:12.5px}
+  .pstatus{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#9aa1ad;padding:0 0 9px}
+  .pstatus .dot{width:7px;height:7px;border-radius:50%;background:#6b7280;flex:none}
+  .pstatus.live{color:#6ee7a8}.pstatus.live .dot{background:#22c55e;animation:blip 1.4s infinite}
+  .pstatus.buf{color:#f0c48a}.pstatus.buf .dot{background:#f0c48a}
+  .pstatus.err{color:#ff9c9c}.pstatus.err .dot{background:#ef4444}
+  .pstatus .mid{margin-left:auto}
+
+  @media (max-width:860px){
+    .prow{height:66px;gap:9px}
+    .hide-sm{display:none!important}
+    .grid{grid-template-columns:repeat(auto-fill,minmax(122px,1fr));gap:11px}
+    .st{padding:12px 8px}
+    .st .bx,.st .bx img{width:70px;height:70px}
+    .st .bx{margin-bottom:9px}
+    .st .nm{font-size:13px;min-height:33px}
+    .now{display:none}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap top">
+    <div class="logo"><i>R</i>Radio<span>Italiane</span></div>
+    <label class="search">
+      <svg viewBox="0 0 24 24"><path d="M10 2a8 8 0 1 0 4.9 14.3l5 5 1.4-1.4-5-5A8 8 0 0 0 10 2zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12z"/></svg>
+      <input id="q" type="search" placeholder="Cerca una stazione — es. Deejay, Studio+, Rai…" autocomplete="off" spellcheck="false">
+    </label>
+    <div class="now"><b id="clock">--:--</b><small id="day">—</small></div>
+  </div>
+  <nav class="cats"><div class="wrap"><div class="tabs" id="tabs"></div></div></nav>
+</header>
+
+<main class="wrap">
+  <div class="banner" id="banner"></div>
+
+  <div class="results">
+    <h2 id="count">180 stazioni</h2>
+    <p id="hint"></p>
+    <div class="filters">
+      <button id="sortAZ" class="on">A–Z</button>
+      <button id="sortPop">Più ascoltate</button>
+    </div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <section class="band" id="recentSect" style="display:none">
+    <h3>Ascoltate di recente</h3>
+    <div class="recent" id="recents"></div>
+  </section>
+
+  <section class="band">
+    <h3>Aiuto</h3>
+    <details open>
+      <summary>Ascoltare in background, con lo schermo spento</summary>
+      <div class="in">
+        <p>La riproduzione prosegue quando l’app passa in secondo piano o lo schermo si spegne. In background il player
+        non mette più in pausa e non cambia stream — perché è proprio il cambio di stream a far morire l’audio quando il
+        browser non consente l’avvio automatico — ma riprende da solo lo stesso flusso se il sistema lo sospende.
+        I comandi (play, pausa, precedente, successiva) restano disponibili nella notifica dei media, sulle cuffie e
+        nella schermata di blocco.</p>
+        <p><strong>iPhone e iPad:</strong> usa <strong>Safari</strong>. Con Chrome su iOS o aprendo la pagina dentro il browser di
+        Facebook, Instagram o TikTok l’audio si ferma quando esci: è un limite di iOS, non della pagina. Avvia la radio con
+        un tocco: poi la controlli dal Centro di Controllo e dalla schermata di blocco.</p>
+        <p><strong>Android:</strong> vanno bene Chrome, Brave, Firefox e Samsung Internet. Se bloccando lo schermo il suono si
+        ferma, togli il risparmio energetico per il browser: <em>Impostazioni → App → Chrome → Batteria → Nessuna restrizione</em>.
+        Su Xiaomi, Huawei, Oppo e Realme consenti anche l’avvio automatico e disattiva il risparmio energetico avanzato:
+        Android sospende le app in background e in quel caso nessun sito può continuare a suonare.</p>
+        <p>Consiglio per il tragitto: avvia la stazione con un tocco, poi blocca lo schermo. Se in galleria o in zone senza
+        campo lo stream si interrompe, riparte da solo appena torna la rete; in casi rari conviene premere play dalla notifica.</p>
+      </div>
+    </details>
+    <details>
+      <summary>Una stazione non parte</summary>
+      <div class="in">
+        <p>Il player prova da solo gli stream alternativi della stessa emittente: se il primo server non risponde passa al
+        successivo, e nella barra in basso compare “via riserva”. Se dopo qualche secondo non senti nulla:</p>
+        <ul>
+          <li>controlla che la pagina sia aperta dal file <code>radio-italiane.html</code> e non dentro un’anteprima che blocca la rete;</li>
+          <li>premi <em>Riprova</em> nella barra del player;</li>
+          <li>apri <em>Testa gli stream</em> qui sotto per vedere quali server rispondono dalla tua connessione.</li>
+        </ul>
+        <p>Su reti aziendali o scolastiche molti server di streaming sono filtrati: da un’altra connessione funzionano.</p>
+      </div>
+    </details>
+    <details>
+      <summary>Formati e requisiti</summary>
+      <div class="in">
+        <p>La maggior parte delle stazioni trasmette in MP3 o AAC e parte ovunque. Quelle segnate <strong>HLS</strong> (RTL 102.5, Radio Deejay,
+        Radio Zeta, RDS, Radio Italia, Radio Capital, m2o…) hanno bisogno di Safari — che le legge da solo — oppure della libreria
+        <code>hls.js</code>, che la pagina scarica da una CDN quando serve.</p>
+        <p><strong>Radio 24</strong> trasmette solo in HTTP: funziona aprendo il file dal disco, mentre da una pagina web in HTTPS il browser la blocca.
+        È l’unica della lista in questa situazione.</p>
+      </div>
+    </details>
+    <details>
+      <summary>Testa gli stream</summary>
+      <div class="in">
+        <p>Il test prova tutti gli indirizzi di ogni stazione dal tuo browser e segna in verde quelli che rispondono.
+        Le emittenti con il segno rosso hanno il server giù, oppure sono bloccate dalla tua rete.</p>
+        <div class="row">
+          <button class="btn" id="testVisible">Testa le stazioni visibili</button>
+          <button class="btn" id="testAll">Testa tutte (180)</button>
+          <button class="btn" id="testStop" disabled>Ferma</button>
+          <button class="btn" id="copyDiag">Copia il log</button>
+        </div>
+        <div class="sum" id="sum">Nessun test eseguito.</div>
+        <div class="log" id="log"></div>
+      </div>
+    </details>
+  </section>
+
+  <footer>
+    <p>Le 180 stazioni sono trasmesse direttamente dalle emittenti: questa pagina non ospita né registra audio.
+    Gli indirizzi sono controllati periodicamente e ogni stazione ha, dove esiste, uno stream di riserva.
+    Le liste delle emittenti cambiano spesso: se una radio non risponde da giorni, segnalalo con <em>Copia il log</em>.</p>
+    <p>Comandi: <code>spazio</code> play/pausa · <code>←</code> <code>→</code> stazione precedente e successiva · <code>/</code> cerca ·
+    <code>m</code> audio on/off · <code>f</code> preferiti · <code>r</code> stazione casuale. Preferiti, volume e ultima stazione restano salvati nel browser.</p>
+  </footer>
+</main>
+
+<div class="player" id="player">
+  <div class="wrap">
+    <div class="pstatus" id="status"><span class="dot"></span><span id="statustext">Scegli una stazione dalla lista</span><span class="mid hide-sm" id="viatxt"></span></div>
+    <div class="prow">
+      <div class="plogo" id="ptile"><span class="mono" id="pmono">R</span><img id="pimg" alt="" class="off"></div>
+      <div class="pmeta">
+        <b id="pname">Nessuna stazione selezionata</b>
+        <span id="psub">Seleziona una radio per iniziare</span>
+      </div>
+      <button class="ico hide-sm" id="prev" title="Stazione precedente"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button>
+      <button class="play" id="play" title="Play / Pausa (spazio)"><svg id="playicon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+      <button class="ico hide-sm" id="next" title="Stazione successiva"><svg viewBox="0 0 24 24"><path d="M16 6h2v12h-2zM6 18l8.5-6L6 6z"/></svg></button>
+      <button class="ico hide-sm" id="rand" title="Stazione casuale (r)"><svg viewBox="0 0 24 24"><path d="M17 3l4 4-4 4V8.5h-1.2c-1.1 0-1.7.4-2.6 1.6l-.7.9-1.3-1.7.5-.7C13.1 7 14.3 6.3 15.8 6.3H17zm0 12.5V13l4 4-4 4v-2.5h-1.2c-1.5 0-2.7-.7-3.9-2.3L9.3 8.9C8.4 7.7 7.8 7.3 6.7 7.3H3v-2h3.7c1.5 0 2.7.7 3.9 2.3l3.6 5.3c.9 1.2 1.5 1.6 2.6 1.6H17zM3 15.3h3.7c1.1 0 1.7-.4 2.6-1.6l.7-.9 1.3 1.7-.5.7c-1.2 1.6-2.4 2.3-3.9 2.3H3z"/></svg></button>
+      <div class="vol hide-sm">
+        <button class="ico" id="mute" title="Audio on/off (m)" style="width:28px;height:28px"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4zm12.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z"/></svg></button>
+        <input type="range" id="vol" min="0" max="100" value="80" aria-label="Volume">
+      </div>
+      <button class="ico" id="fav" title="Aggiungi ai preferiti (f)"><svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.5-9A5.3 5.3 0 0 1 12 5.7 5.3 5.3 0 0 1 21.5 12c-2 4.4-9.5 9-9.5 9z"/></svg></button>
+      <button class="ico wide hide-sm" id="retry" title="Riprova la connessione">Riprova</button>
+      <select class="hide-sm" id="sleep" title="Spegnimento automatico">
+        <option value="0">Timer off</option>
+        <option value="15">15 min</option>
+        <option value="30">30 min</option>
+        <option value="60">60 min</option>
+        <option value="90">90 min</option>
+      </select>
+      <span class="timerinfo hide-sm" id="timerinfo" style="color:#f0c48a;font-size:12px"></span>
+      <button class="ico hide-sm" id="openlive" title="Apri lo stream in una nuova scheda"><svg viewBox="0 0 24 24"><path d="M14 3v2h3.6l-9.3 9.3 1.4 1.4L19 6.4V10h2V3h-7zm-9 4h5V5H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5h-2v5H5V7z"/></svg></button>
+    </div>
+  </div>
+</div>
+
+<audio id="audio" preload="none"></audio>
+
+<script>
+/* =========================================================================
+   Radio Italiane — player a file singolo
+   180 stazioni · stream verificati · ripiego automatico sugli stream di riserva
+   ========================================================================= */
+const CATS = [
+  ["pop","Pop e hit"],["rock","Rock"],["dance","Dance"],["urban","Hip hop e rap"],
+  ["anni","Anni 60-90"],["news","News e sport"],["class","Classica e relax"],
+  ["reg","Regionali"],["rel","Religiose"],["fav","Preferiti"]
+];
+
+const STATIONS = [
+/* ── POP & HITS ───────────────────────────────────────── */
+  /* 47 stazioni */
+  {n:"RTL 102.5",u:"https://dd782ed59e2a4e86aabf6fc508674b59.msvdn.net/live/S97044836/tbbP8T1ZRPBL/playlist_audio.m3u8",m:["https://dd782ed59e2a4e86aabf6fc508674b59.msvdn.net/live/S97044836/tbbP8T1ZRPBL/playlist.m3u8","https://dd782ed59e2a4e86aabf6fc508674b59.msvdn.net/live/S97044836/tbbP8T1ZRPBL/playlist_video.m3u8"],c:"pop",g:"Hit radio, musica e attualità",b:"AAC 192 · HLS",h:1,f:"https://cloud.rtl.it/assets/www.rtl.it/3.0.64/img/logo/favicon-96x96.png"},
+  {n:"RTL 102.5 Best",u:"https://dd782ed59e2a4e86aabf6fc508674b59.msvdn.net/live/S76960628/fYNIdrsfP3xC/playlist_audio.m3u8",m:["https://dd782ed59e2a4e86aabf6fc508674b59.msvdn.net/live/S76960628/OEPHRUIctA0M/playlist.m3u8","https://dd782ed59e2a4e86aabf6fc508674b59.msvdn.net/live/S76960628/fYNIdrsfP3xC/playlist.m3u8"],c:"pop",g:"Solo grandi successi",b:"AAC 192 · HLS",h:1,f:"https://cloud.rtl.it/assets/play.rtl.it/2.1.5/img/logo/favicon-96x96.png"},
+  {n:"RTL 102.5 News",u:"https://dd782ed59e2a4e86aabf6fc508674b59.msvdn.net/live/S38122967/aJMOUBAFc2Bc/playlist_audio.m3u8",m:["https://dd782ed59e2a4e86aabf6fc508674b59.msvdn.net/live/S38122967/aJMOUBAFc2Bc/playlist.m3u8"],c:"pop",g:"Informazione e news 24h",b:"AAC 192 · HLS",h:1},
+  {n:"Radio Zeta",u:"https://dd782ed59e2a4e86aabf6fc508674b59.msvdn.net/live/S9346184/XEx1LqlYbNic/playlist_audio.m3u8",m:["https://dd782ed59e2a4e86aabf6fc508674b59.msvdn.net/live/S9346184/XEx1LqlYbNic/playlist.m3u8","https://dd782ed59e2a4e86aabf6fc508674b59.msvdn.net/live/S9346184/XEx1LqlYbNic/playlist_video.m3u8"],c:"pop",g:"Generazione Zeta: nuove hit",b:"AAC · HLS",h:1,f:"https://radiozeta.rtl.it/favicon-96x96.png"},
+  {n:"Radio Deejay",u:"https://4c4b867c89244861ac216426883d1ad0.msvdn.net/radiodeejay/radiodeejay/master_ma.m3u8",m:["https://4c4b867c89244861ac216426883d1ad0.msvdn.net/radiodeejay/radiodeejay/master.m3u8"],c:"pop",g:"Pop, dance e intrattenimento",b:"AAC+ 122 · HLS",h:1,f:"https://www.deejay.it/wp-content/themes/network-deejay/favicon.ico"},
+  {n:"Radio Capital",u:"https://4c4b867c89244861ac216426883d1ad0.msvdn.net/radiocapital/radiocapital/master_ma.m3u8",m:["https://4c4b867c89244861ac216426883d1ad0.msvdn.net/radiocapital/radiocapital/master.m3u8"],c:"pop",g:"Musica italiana e internazionale",b:"AAC+ 122 · HLS",h:1,f:"https://www.capital.it/wp-content/themes/network-capital/favicon.ico"},
+  {n:"m2o",u:"https://4c4b867c89244861ac216426883d1ad0.msvdn.net/radiom2o/radiom2o/master_ma.m3u8",m:["https://4c4b867c89244861ac216426883d1ad0.msvdn.net/radiom2o/radiom2o/master.m3u8"],c:"pop",g:"Dance e musica da club",b:"AAC+ 122 · HLS",h:1,f:"https://cdn.gelestatic.it/m2o/sites/2/2021/10/LOGO-e1635353469455-1200x1200.png"},
+  {n:"Radio Italia",u:"https://radioitaliasmi.akamaized.net/hls/live/2093120/RISMI/stream01/streamPlaylist.m3u8",c:"pop",g:"Solo musica italiana",b:"HLS",h:1},
+  {n:"Radio 105",u:"https://icecast.unitedradio.it/Radio105.mp3",m:["https://icy.unitedradio.it/Radio105.mp3"],c:"pop",g:"Pop, hit e programmi",b:"MP3 128",f:"https://img-api.cloud.mediaset.net/api/images/rd/v1/ita/aHR0cHM6Ly93d3cuMTA1Lm5ldC93cC1jb250ZW50L3VwbG9hZHMvMjAyNS8wMy9sb2dvX2NvbG9yZWQucG5n/-/0/0?r=7a2735470f07c50e2cbe26fd2470a4e8"},
+  {n:"RDS 100% Grandi Successi",u:"https://stream.rds.radio/audio/rds.stream_aac64/chunklist.m3u8",m:["https://stream.rds.radio/audio/rds.stream_aac/master.m3u8","https://stream.rds.radio/audio/rds.stream_aac64/playlist.m3u8"],c:"pop",g:"Grandi successi italiani e stranieri",b:"AAC 64 · HLS",h:1,f:"https://media.rds.it/web/web-site-brandnew/RDS.jpg",a:"rds dimensione suono"},
+  {n:"R101",u:"https://icecast.unitedradio.it/r101",m:["https://icecast.unitedradio.it/r101_mp3","https://icy.unitedradio.it/r101_mp3"],c:"pop",g:"Pop e successi del momento",b:"AAC+ 95",f:"https://img-api.cloud.mediaset.net/api/images/rd/v1/ita/aHR0cHM6Ly93d3cucjEwMS5pdC93cC1jb250ZW50L3VwbG9hZHMvMjAyNS8xMi9mYXZpY29uXzcucG5n/-/0/0?r=bfc46bc4af11aab21255ce6bde962fa6"},
+  {n:"Radio Kiss Kiss",u:"https://ice08.fluidstream.net/kk_hits.aac",c:"pop",g:"Hit e musica napoletana",b:"AAC 128",f:"https://www.kisskiss.it/favicon.ico"},
+  {n:"Radio Monte Carlo",u:"https://icy.unitedradio.it/RMC.aac",m:["https://icecast.unitedradio.it/RMC.aac"],c:"pop",g:"Chill, italiane ed eleganza",b:"AAC+ 95",f:"https://img-api.cloud.mediaset.net/api/images/rd/v1/ita/aHR0cHM6Ly93d3cucmFkaW9tb250ZWNhcmxvLm5ldC93cC1jb250ZW50L3VwbG9hZHMvMjAyNS8wNS9jcm9wcGVkLWZhdmljb25fMS0xLnBuZw/-/0/0?r=073a79d0fa661589553336655a8ac844"},
+  {n:"Radio Subasio",u:"https://icy.unitedradio.it/Subasio.mp3",m:["https://icecast.unitedradio.it/Subasio.mp3"],c:"pop",g:"Pop italiano e grandi voci",b:"MP3 128",f:"https://www.radiosubasio.it/wp-content/themes/radiosubasiov2/assets/images/logo-radio-subasio.png"},
+  {n:"Radio Subasio+",u:"https://icy.unitedradio.it/SubasioPiu.mp3",m:["https://icecast.unitedradio.it/SubasioPiu.mp3"],c:"pop",g:"Il meglio degli anni ’90 e 2000",b:"MP3 128",f:"https://www.radiosubasio.it/wp-content/uploads/2020/07/placehoder-news.jpg"},
+  {n:"Radio Number One",u:"https://rn1.fluidstream.eu/rn1.aac",c:"pop",g:"Pop, dance e italiane",b:"AAC 128"},
+  {n:"Radio Italia Anni 60",u:"https://str01.fluidstream.net/anni60.mp3",c:"pop",g:"Successi degli anni ’60",b:"MP3 128",f:"https://www.ria60.it/wp-content/uploads/2024/06/cropped-Logo-RIA60-1-1-180x180.png"},
+  {n:"Radio 80",u:"https://sphera.fluidstream.eu/radio80.aac",c:"pop",g:"Solo grandi successi anni ’80",b:"AAC+ 64",f:"https://www.radio80.it/wp-content/uploads/2025/06/cropped-radio-80-sito-180x180.png"},
+  {n:"Radio Company",u:"https://sphera.fluidstream.eu/company.aac",c:"pop",g:"Musica italiana e hit",b:"AAC+ 64",f:"https://www.radiocompany.com/wp-content/uploads/2025/07/radio-company-icona-300x300.png"},
+  {n:"Radio Cuore",u:"https://stream10.xdevel.com/audio32s975552-1839/stream/icecast.audio",c:"pop",g:"Melodia e musica italiana",b:"MP3",f:"https://www.radiocuore.it/theme/images/icon/apple-icon-57x57.png"},
+  {n:"Radio Amore",u:"https://stream10.xdevel.com/audio8s977886-2322/stream/icecast.audio",c:"pop",g:"Musica italiana e napoletana",b:"MP3"},
+  {n:"Radio Time 90",u:"https://stream3.xdevel.com/audio1s975521-192/stream/icecast.audio",c:"pop",g:"Successi anni ’90 e 2000",b:"MP3",r:"Sicilia"},
+  {n:"Radio Birikina",u:"https://ice02.fluidstream.net/birikina.mp3",c:"pop",g:"Musica italiana e ballabile",b:"MP3 128",r:"Veneto",f:"https://www.birikina.it/wp-content/uploads/2020/02/ico-fb-1.png"},
+  {n:"Radio Bellla & Monella",u:"https://ice02.fluidstream.net/bella.mp3",c:"pop",g:"Hit italiane e internazionali",b:"MP3 128",r:"Veneto",f:"https://www.belllaemonella.it/favicon.ico"},
+  {n:"Radio Piterpan",u:"https://ice02.fluidstream.net/piterpan.mp3",c:"pop",g:"Musica per bambini e famiglie",b:"MP3 128",r:"Veneto",f:"https://www.piterpan.it/favicon.ico"},
+  {n:"Radio Margherita",u:"https://streaming.radiomargherita.com/stream/radiomargherita",c:"pop",g:"Musica italiana",b:"MP3 320",r:"Sicilia"},
+  {n:"Radio Italia Network",u:"https://gr.fluidstream.eu/gr7.mp3",c:"pop",g:"Musica italiana contemporanea",b:"MP3 128",f:"https://giornaleradio.fm/wp-content/uploads/2023/03/cropped-giornale-radio-logo-2-180x180.png"},
+  {n:"Radio Energy Italia",u:"https://s9.myradiostream.com/:5824/listen.mp3",c:"pop",g:"Dance, hit e novità",b:"MP3 128"},
+  {n:"New Hits Radio",u:"https://newhitsradio.streamingmedia.it/play",c:"pop",g:"Solo hit del momento",b:"MP3"},
+  {n:"Radio Sei",u:"https://icecast.ithost.it/radiosei.ogg",c:"pop",g:"Pop e informazione da Roma",b:"AAC+",r:"Lazio",f:"https://radio-streaming.it/assets/image/radio/180/RadioSei250.png"},
+  {n:"Radio Armisa",u:"https://onair.armisa.it/listen/armisa/radio.mp3",c:"pop",g:"Musica e intrattenimento",b:"MP3",f:"https://armisa.it/assets/favicon/android-chrome-512x512.png"},
+  {n:"Lolliradio Italia",u:"https://stream.lolliradio.net/lolli_italia.mp3",c:"pop",g:"Pop italiano no-stop",b:"MP3",f:"https://lolliradio.net/wp-content/uploads/2025/11/Logo-Lolli-20-anni_3000x3000-px-370x370.png"},
+  {n:"Dimensione Suono Roma",u:"https://stream.dimensionesuonoroma.radio/audio/dsr.stream_aac64/playlist.m3u8",m:["https://stream.dimensionesuonoroma.radio/audio/dsr.stream_aac/master.m3u8"],c:"pop",g:"Hit e successi da Roma",b:"AAC · HLS",h:1,r:"Lazio",f:"https://www.dimensionesuonoroma.it/wp-content/themes/rds-dsr/icons/favicon-196x196.png"},
+  {n:"Radio Rouge Italy",u:"https://nl1.streamingpulse.com/ssl/radiorougeitaly",c:"pop",g:"Musica italiana e internazionale",b:"MP3"},
+  {n:"United Music Hits Italia",u:"https://icy.unitedradio.it/um011.mp3",c:"pop",g:"Le hit italiane del momento",b:"MP3"},
+  {n:"RMC Music Star: George Michael",u:"https://icy.unitedradio.it/MusicStarPrince.mp3",c:"pop",g:"Solo George Michael e Wham!",b:"MP3",f:"https://img-api.cloud.mediaset.net/api/images/rd/v1/ita/aHR0cHM6Ly93d3cucmFkaW9tb250ZWNhcmxvLm5ldC93cC1jb250ZW50L3VwbG9hZHMvMjAyNS8wNS9jcm9wcGVkLWZhdmljb25fMS0xLnBuZw/-/0/0?r=073a79d0fa661589553336655a8ac844"},
+  {n:"RMC Music Star: Pino Daniele",u:"https://icy.unitedradio.it/Daniele.mp3",c:"pop",g:"Solo Pino Daniele",b:"MP3",f:"https://img-api.cloud.mediaset.net/api/images/rd/v1/ita/aHR0cHM6Ly93d3cucmFkaW9tb250ZWNhcmxvLm5ldC93cC1jb250ZW50L3VwbG9hZHMvMjAyNS8wNS9jcm9wcGVkLWZhdmljb25fMS0xLnBuZw/-/0/0?r=073a79d0fa661589553336655a8ac844"},
+  {n:"RMC Music Star: Zucchero",u:"https://icy.unitedradio.it/Zucchero.mp3",c:"pop",g:"Solo Zucchero",b:"MP3",f:"https://img-api.cloud.mediaset.net/api/images/rd/v1/ita/aHR0cHM6Ly93d3cucmFkaW9tb250ZWNhcmxvLm5ldC93cC1jb250ZW50L3VwbG9hZHMvMjAyNS8wNS9jcm9wcGVkLWZhdmljb25fMS0xLnBuZw/-/0/0?r=073a79d0fa661589553336655a8ac844"},
+  {n:"RMC Music Star: Jovanotti",u:"https://icy.unitedradio.it/Jovanotti.mp3",c:"pop",g:"Solo Jovanotti",b:"MP3",f:"https://img-api.cloud.mediaset.net/api/images/rd/v1/ita/aHR0cHM6Ly93d3cucmFkaW9tb250ZWNhcmxvLm5ldC93cC1jb250ZW50L3VwbG9hZHMvMjAyNS8wNS9jcm9wcGVkLWZhdmljb25fMS0xLnBuZw/-/0/0?r=073a79d0fa661589553336655a8ac844"},
+  {n:"RMC Music Star: Coldplay",u:"https://icy.unitedradio.it/ColdPlay.mp3",c:"pop",g:"Solo Coldplay",b:"MP3",f:"https://img-api.cloud.mediaset.net/api/images/rd/v1/ita/aHR0cHM6Ly93d3cucmFkaW9tb250ZWNhcmxvLm5ldC93cC1jb250ZW50L3VwbG9hZHMvMjAyNS8wNS9jcm9wcGVkLWZhdmljb25fMS0xLnBuZw/-/0/0?r=073a79d0fa661589553336655a8ac844"},
+  {n:"Deejay Suona Italia",u:"https://4c4b867c89244861ac216426883d1ad0.msvdn.net/webradio/deejaysuonaitalia/playlist.m3u8",c:"pop",g:"Musica italiana, solo grandi voci",b:"AAC · HLS",h:1,f:"https://cdn.gelestatic.it/deejay/sites/2/2015/05/webradio_deejay_suona_italia-320x320.png"},
+  {n:"Deejay Time",u:"https://4c4b867c89244861ac216426883d1ad0.msvdn.net/webradio/deejaytime/playlist.m3u8",c:"pop",g:"Il mito di Deejay Time",b:"AAC · HLS",h:1,f:"https://cdn.gelestatic.it/deejay/sites/2/2015/05/webradio_deejay_time-320x320.png"},
+  {n:"Capital Music",u:"https://4c4b867c89244861ac216426883d1ad0.msvdn.net/webradio/capitalmusic/playlist.m3u8",c:"pop",g:"Solo musica, zero chiacchiere",b:"AAC · HLS",h:1,f:"https://www.capital.it/wp-content/themes/network-capital/favicon.ico"},
+  {n:"Capital W L'Italia",u:"https://4c4b867c89244861ac216426883d1ad0.msvdn.net/webradio/capitalwitalia/playlist.m3u8",c:"pop",g:"Canzoni italiane 24h",b:"AAC · HLS",h:1,f:"https://cdn.gelestatic.it/capital/sites/2/2016/11/webradio-vivalitalia-320x320.jpg"},
+  {n:"Radio Bruno Gold",u:"https://stream2.xdevel.com/audio2s975355-55/stream/icecast.audio",c:"pop",g:"Il meglio di Radio Bruno",b:"AAC+",r:"Emilia",f:"https://www.radiobruno.it/wp-content/uploads/2023/10/cropped-logo-radiobruno-favicon-512-512-180x180.png"},
+  {n:"Radio Company Stile Italiano",u:"https://sphera.fluidstream.eu/companyitalia.mp3",c:"pop",g:"La grande musica italiana",b:"MP3",f:"https://www.radiocompany.com/wp-content/uploads/2025/07/radio-company-icona-300x300.png"},
+  {n:"Deejay 30 Songs",u:"https://4c4b867c89244861ac216426883d1ad0.msvdn.net/radiodeejay30songs/radiodeejay30songs/master_ma.m3u8",c:"pop",g:"30 canzoni, solo le migliori",b:"AAC+ 122 · HLS",h:1,f:"https://cdn.gelestatic.it/deejay/www/2015/05/webradio_30_songs.png"},
+  {n:"Radio Kiss Kiss +1",u:"https://kk.fluidstream.eu/KissKiss1.mp3",c:"pop",g:"Kiss Kiss, un'ora dopo",b:"MP3 128",a:"kiss kiss piu one"},
+
+/* ── ROCK ─────────────────────────────────────────────── */
+  /* 17 stazioni */
+  {n:"Virgin Radio",u:"https://icecast.unitedradio.it/Virgin.mp3",m:["https://icy.unitedradio.it/Virgin.mp3"],c:"rock",g:"Rock italiano e internazionale",b:"MP3 128",f:"https://img-api.cloud.mediaset.net/api/images/rd/v1/ita/aHR0cHM6Ly93d3cudmlyZ2lucmFkaW8uaXQvd3AtY29udGVudC91cGxvYWRzLzIwMjUvMTIvY3JvcHBlZC1jcm9wcGVkLWZhdmljb25fMi5wbmc/-/0/0?r=92873db5b51c58c53e485f9ef80fd289"},
+  {n:"Radio Freccia",u:"https://dd782ed59e2a4e86aabf6fc508674b59.msvdn.net/live/S3160845/0tuSetc8UFkF/playlist_audio.m3u8",m:["https://dd782ed59e2a4e86aabf6fc508674b59.msvdn.net/live/S3160845/0tuSetc8UFkF/playlist.m3u8","https://dd782ed59e2a4e86aabf6fc508674b59.msvdn.net/live/S3160845/0tuSetc8UFkF/playlist_video.m3u8"],c:"rock",g:"Rock, metal e grandi riff",b:"AAC 192 · HLS",h:1,f:"https://cloud.radiofreccia.it/assets/www.radiofreccia.it/1.0.43/img/logo/android-icon-192x192.png"},
+  {n:"Virgin Radio Classic Rock",u:"https://icy.unitedradio.it/VirginRockClassics.mp3",m:["https://icecast.unitedradio.it/VirginRockClassics.mp3"],c:"rock",g:"Classici del rock",b:"MP3 128",f:"https://img-api.cloud.mediaset.net/api/images/rd/v1/ita/aHR0cHM6Ly93d3cudmlyZ2lucmFkaW8uaXQvd3AtY29udGVudC91cGxvYWRzLzIwMjUvMTIvY3JvcHBlZC1jcm9wcGVkLWZhdmljb25fMi5wbmc/-/0/0?r=92873db5b51c58c53e485f9ef80fd289"},
+  {n:"Virgin Radio Rock ’70",u:"https://icy.unitedradio.it/VirginRock70.mp3",m:["https://icecast.unitedradio.it/VirginRock70.mp3"],c:"rock",g:"Rock anni Settanta",b:"MP3 128",f:"https://img-api.cloud.mediaset.net/api/images/rd/v1/ita/aHR0cHM6Ly93d3cudmlyZ2lucmFkaW8uaXQvd3AtY29udGVudC91cGxvYWRzLzIwMjUvMTIvY3JvcHBlZC1jcm9wcGVkLWZhdmljb25fMi5wbmc/-/0/0?r=92873db5b51c58c53e485f9ef80fd289"},
+  {n:"Virgin Radio Rock ’80",u:"https://icy.unitedradio.it/VirginRock80.mp3",m:["https://icecast.unitedradio.it/VirginRock80.mp3"],c:"rock",g:"Rock anni Ottanta",b:"MP3 128",f:"https://img-api.cloud.mediaset.net/api/images/rd/v1/ita/aHR0cHM6Ly93d3cudmlyZ2lucmFkaW8uaXQvd3AtY29udGVudC91cGxvYWRzLzIwMjUvMTIvY3JvcHBlZC1jcm9wcGVkLWZhdmljb25fMi5wbmc/-/0/0?r=92873db5b51c58c53e485f9ef80fd289"},
+  {n:"Virgin Radio Rock ’90",u:"https://icy.unitedradio.it/Virgin_03.mp3",m:["https://icecast.unitedradio.it/Virgin_03.mp3"],c:"rock",g:"Rock anni Novanta",b:"MP3 128",f:"https://img-api.cloud.mediaset.net/api/images/rd/v1/ita/aHR0cHM6Ly93d3cudmlyZ2lucmFkaW8uaXQvd3AtY29udGVudC91cGxvYWRzLzIwMjUvMTIvY3JvcHBlZC1jcm9wcGVkLWZhdmljb25fMi5wbmc/-/0/0?r=92873db5b51c58c53e485f9ef80fd289"},
+  {n:"Virgin Radio Hard Rock",u:"https://icy.unitedradio.it/VirginHardRock.mp3",m:["https://icecast.unitedradio.it/VirginHardRock.mp3"],c:"rock",g:"Hard rock e metal",b:"MP3 128",f:"https://img-api.cloud.mediaset.net/api/images/rd/v1/ita/aHR0cHM6Ly93d3cudmlyZ2lucmFkaW8uaXQvd3AtY29udGVudC91cGxvYWRzLzIwMjUvMTIvY3JvcHBlZC1jcm9wcGVkLWZhdmljb25fMi5wbmc/-/0/0?r=92873db5b51c58c53e485f9ef80fd289"},
+  {n:"Virgin Radio Rock Ballads",u:"https://icy.unitedradio.it/Virgin_06.mp3",m:["https://icecast.unitedradio.it/Virgin_06.mp3"],c:"rock",g:"Rock ballad",b:"MP3 128",f:"https://img-api.cloud.mediaset.net/api/images/rd/v1/ita/aHR0cHM6Ly93d3cudmlyZ2lucmFkaW8uaXQvd3AtY29udGVudC91cGxvYWRzLzIwMjUvMTIvY3JvcHBlZC1jcm9wcGVkLWZhdmljb25fMi5wbmc/-/0/0?r=92873db5b51c58c53e485f9ef80fd289"},
+  {n:"Virgin Radio Rock Hits",u:"https://icy.unitedradio.it/VirginRockHits.mp3",m:["https://icecast.unitedradio.it/VirginRockHits.mp3"],c:"rock",g:"Le hit del rock",b:"MP3 128",f:"https://img-api.cloud.mediaset.net/api/images/rd/v1/ita/aHR0cHM6Ly93d3cudmlyZ2lucmFkaW8uaXQvd3AtY29udGVudC91cGxvYWRzLzIwMjUvMTIvY3JvcHBlZC1jcm9wcGVkLWZhdmljb25fMi5wbmc/-/0/0?r=92873db5b51c58c53e485f9ef80fd289"},
+  {n:"Virgin Radio Rock Party",u:"https://icy.unitedradio.it/VirginRockParty.mp3",m:["https://icecast.unitedradio.it/VirginRockParty.mp3"],c:"rock",g:"Rock da festa",b:"MP3 128",f:"https://img-api.cloud.mediaset.net/api/images/rd/v1/ita/aHR0cHM6Ly93d3cudmlyZ2lucmFkaW8uaXQvd3AtY29udGVudC91cGxvYWRzLzIwMjUvMTIvY3JvcHBlZC1jcm9wcGVkLWZhdmljb25fMi5wbmc/-/0/0?r=92873db5b51c58c53e485f9ef80fd289"},
+  {n:"Virgin Radio Alternative",u:"https://icy.unitedradio.it/VirginRockAlternative.mp3",m:["https://icecast.unitedradio.it/VirginRockAlternative.mp3"],c:"rock",g:"Rock alternativo e indie",b:"MP3 128",f:"https://img-api.cloud.mediaset.net/api/images/rd/v1/ita/aHR0cHM6Ly93d3cudmlyZ2lucmFkaW8uaXQvd3AtY29udGVudC91cGxvYWRzLzIwMjUvMTIvY3JvcHBlZC1jcm9wcGVkLWZhdmljb25fMi5wbmc/-/0/0?r=92873db5b51c58c53e485f9ef80fd289"},
+  {n:"United Music Rock Italiano",u:"https://icy.unitedradio.it/um076.mp3",c:"rock",g:"Il rock italiano",b:"MP3"},
+  {n:"RTR 99",u:"https://rtr99.fluidstream.eu/rtr99.mp3?FLID=3",c:"rock",g:"Rock e canzoni fuori dal coro",b:"MP3"},
+  {n:"Radio Easy Rock",u:"https://sphera.fluidstream.eu/easyrock.aac",c:"rock",g:"Il meglio del rock",b:"AAC+",f:"https://www.radioeasyrock.it/wp-content/uploads/2025/07/radio-easy-rock-icona-300x300.png"},
+  {n:"Virgin Radio Rockstar: Queen",u:"https://icy.unitedradio.it/Virgin_05.mp3",c:"rock",g:"Solo Queen, non-stop",b:"MP3",f:"https://img-api.cloud.mediaset.net/api/images/rd/v1/ita/aHR0cHM6Ly93d3cudmlyZ2lucmFkaW8uaXQvd3AtY29udGVudC91cGxvYWRzLzIwMjUvMTIvY3JvcHBlZC1jcm9wcGVkLWZhdmljb25fMi5wbmc/-/0/0?r=92873db5b51c58c53e485f9ef80fd289"},
+  {n:"Virgin Radio Rockstar: Rolling Stones",u:"https://icy.unitedradio.it/VirginSpecialEvent.mp3",c:"rock",g:"Solo Rolling Stones",b:"MP3",f:"https://img-api.cloud.mediaset.net/api/images/rd/v1/ita/aHR0cHM6Ly93d3cudmlyZ2lucmFkaW8uaXQvd3AtY29udGVudC91cGxvYWRzLzIwMjUvMTIvY3JvcHBlZC1jcm9wcGVkLWZhdmljb25fMi5wbmc/-/0/0?r=92873db5b51c58c53e485f9ef80fd289"},
+  {n:"Virgin Radio Rockstar: Bon Jovi",u:"https://icy.unitedradio.it/um1027.mp3",c:"rock",g:"Solo Bon Jovi",b:"MP3",f:"https://img-api.cloud.mediaset.net/api/images/rd/v1/ita/aHR0cHM6Ly93d3cudmlyZ2lucmFkaW8uaXQvd3AtY29udGVudC91cGxvYWRzLzIwMjUvMTIvY3JvcHBlZC1jcm9wcGVkLWZhdmljb25fMi5wbmc/-/0/0?r=92873db5b51c58c53e485f9ef80fd289"},
+
+  /* ── DANCE & ELETTRONICA ──────────────────────────────── */
+  /* 18 stazioni */
+  {n:"RTL 102.5 Disco",u:"https://dd782ed59e2a4e86aabf6fc508674b59.msvdn.net/live/S51100361/Sz3kCA55PrRh/playlist_audio.m3u8",m:["https://dd782ed59e2a4e86aabf6fc508674b59.msvdn.net/live/S51100361/Sz3kCA55PrRh/playlist.m3u8"],c:"dance",g:"Disco music senza interruzioni",b:"AAC 192 · HLS",h:1,f:"https://cloud.rtl.it/assets/www.rtl.it/3.0.64/img/logo/favicon-96x96.png"},
+  {n:"Radio 105 Dance 90",u:"https://icy.unitedradio.it/105Dance90.mp3",m:["https://icecast.unitedradio.it/105Dance90.mp3"],c:"dance",g:"Dance anni Novanta",b:"MP3 128",f:"https://img-api.cloud.mediaset.net/api/images/rd/v1/ita/aHR0cHM6Ly93d3cuMTA1Lm5ldC93cC1jb250ZW50L3VwbG9hZHMvMjAyNS8wMy9sb2dvX2NvbG9yZWQucG5n/-/0/0?r=7a2735470f07c50e2cbe26fd2470a4e8"},
+  {n:"Radio 105 Miami",u:"https://icy.unitedradio.it/105Miami.mp3",m:["https://icecast.unitedradio.it/105Miami.mp3"],c:"dance",g:"House e musica da club",b:"MP3 128",f:"https://img-api.cloud.mediaset.net/api/images/rd/v1/ita/aHR0cHM6Ly93d3cuMTA1Lm5ldC93cC1jb250ZW50L3VwbG9hZHMvMjAyNS8wMy9sb2dvX2NvbG9yZWQucG5n/-/0/0?r=7a2735470f07c50e2cbe26fd2470a4e8"},
+  {n:"Radio 105 Zoo Radio",u:"https://icy.unitedradio.it/105Zoo.mp3",m:["https://icecast.unitedradio.it/105Zoo.mp3"],c:"dance",g:"Elettronica e alternative",b:"MP3 128",f:"https://img-api.cloud.mediaset.net/api/images/rd/v1/ita/aHR0cHM6Ly93d3cuMTA1Lm5ldC93cC1jb250ZW50L3VwbG9hZHMvMjAyNS8wMy9sb2dvX2NvbG9yZWQucG5n/-/0/0?r=7a2735470f07c50e2cbe26fd2470a4e8"},
+  {n:"Radio Studio Più",u:"https://ice.studiopiu.net/milano.aac",m:["https://ice.studiopiu.net/sito.aac","https://ice.studiopiu.net/lago.aac"],c:"dance",g:"La dance radio per eccellenza (Milano)",b:"AAC",r:"Lombardia",f:"https://www.studiopiu.net/studiopiu/assets/img/icon-192.png",a:"studio+ studiopiu studio piu studio più"},
+  {n:"Discoradio",u:"https://icstream.rds.radio/disco",m:["https://stream.discoradio.radio/audio/disco.stream_aac64/playlist.m3u8"],c:"dance",g:"Dance, house e musica da club",b:"MP3",r:"Lombardia",f:"https://www.discoradio.it/wp-content/uploads/2018/10/cropped-logoDR@2x-180x180.png",a:"disco radio"},
+  {n:"Radio Mambo",u:"https://mambo.newradio.it/stream",c:"dance",g:"Dance e musica da ballo",b:"MP3"},
+  {n:"Radio 70 80 90 Dance",u:"https://rblive.it:8060/radio.mp3",c:"dance",g:"Dance anni 70-80-90",b:"MP3",r:"Marche"},
+  {n:"One Dance",u:"https://ice04.fluidstream.net/rn1_2.aac",c:"dance",g:"Dance e hit da club",b:"AAC"},
+  {n:"Funky Radio",u:"https://funkyradio.streamingmedia.it/play.mp3",c:"dance",g:"Funk, soul e groove",b:"MP3"},
+  {n:"Italo Sound Radio",u:"https://icecast.italosound.com/italosound",c:"dance",g:"Italo disco e dance europea",b:"MP3",f:"https://italosound.com/sites/all/themes/framework/apple-touch-icon.png"},
+  {n:"Italo Disco",u:"https://italo-disco.stream.laut.fm/italo-disco",c:"dance",g:"Italo disco classica",b:"MP3"},
+  {n:"70 80 Disco Funk",u:"https://discofunk.streamingmedia.it/play",c:"dance",g:"Disco funk, modern soul e boogie",b:"MP3"},
+  {n:"Radio Kiss Kiss Disco Party",u:"https://kk.fluidstream.eu/kk_discoparty.mp3",c:"dance",g:"Dance e party music",b:"MP3",f:"https://kisskiss.it/wp-content/uploads/elementor/thumbs/discoparty-pn2hglt9od540vyjui55frxmsrj4cmhi5s4v32izak.png"},
+  {n:"Radio Kiss Kiss La Notte Vola",u:"https://kk.fluidstream.eu/kk_notte.mp3",c:"dance",g:"Dance per la notte",b:"MP3",f:"https://kisskiss.it/wp-content/uploads/2022/07/cropped-favicon-new-kisskiss-180x180.png"},
+  {n:"DeeGay Pop & Dance",u:"https://stream.deegay.fm/deegay1.mp3",c:"dance",g:"Pop e dance",b:"MP3"},
+  {n:"Capital Funky Town",u:"https://4c4b867c89244861ac216426883d1ad0.msvdn.net/radiocapitalfunkytown/radiocapitalfunkytown/master_ma.m3u8",c:"dance",g:"Funk, disco e groove",b:"AAC · HLS",h:1,f:"https://cdn.gelestatic.it/capital/sites/2/2016/11/webradio-funkytown2-320x320.jpg"},
+  {n:"Radio 80 Afro",u:"https://sphera.fluidstream.eu/r80_afro.mp3",c:"dance",g:"Afro house e ritmi africani",b:"MP3",f:"https://www.radio80.it/wp-content/uploads/2025/06/cropped-radio-80-sito-180x180.png"},
+
+  /* ── HIP HOP & RAP ────────────────────────────────────── */
+  /* 3 stazioni */
+  {n:"Radio 105 HipHop & RnB",u:"https://icy.unitedradio.it/105HipHopRnB.mp3",m:["https://icecast.unitedradio.it/105HipHopRnB.mp3"],c:"urban",g:"Hip hop e rhythm’n’blues",b:"MP3 128",f:"https://img-api.cloud.mediaset.net/api/images/rd/v1/ita/aHR0cHM6Ly93d3cuMTA1Lm5ldC93cC1jb250ZW50L3VwbG9hZHMvMjAyNS8wMy9sb2dvX2NvbG9yZWQucG5n/-/0/0?r=7a2735470f07c50e2cbe26fd2470a4e8"},
+  {n:"Radio 105 Rap Italia",u:"https://icy.unitedradio.it/105RapItalia.mp3",m:["https://icecast.unitedradio.it/105RapItalia.mp3"],c:"urban",g:"Rap e trap italiana",b:"MP3 128",f:"https://img-api.cloud.mediaset.net/api/images/rd/v1/ita/aHR0cHM6Ly93d3cuMTA1Lm5ldC93cC1jb250ZW50L3VwbG9hZHMvMjAyNS8wMy9sb2dvX2NvbG9yZWQucG5n/-/0/0?r=7a2735470f07c50e2cbe26fd2470a4e8"},
+  {n:"Radio 105 Trap",u:"https://icecast.unitedradio.it/105Trap.mp3",m:["https://icy.unitedradio.it/105Trap.mp3"],c:"urban",g:"Trap e nuove sonorità",b:"MP3 128",f:"https://img-api.cloud.mediaset.net/api/images/rd/v1/ita/aHR0cHM6Ly93d3cuMTA1Lm5ldC93cC1jb250ZW50L3VwbG9hZHMvMjAyNS8wMy9sb2dvX2NvbG9yZWQucG5n/-/0/0?r=7a2735470f07c50e2cbe26fd2470a4e8"},
+
+  /* ── ANNI 60 · 70 · 80 · 90 ───────────────────────────── */
+  /* 25 stazioni */
+  {n:"R101 ’70",u:"https://icy.unitedradio.it/R10170.aac",m:["https://icecast.unitedradio.it/R10170.aac"],c:"anni",g:"I grandi classici anni ’70",b:"AAC 95",f:"https://img-api.cloud.mediaset.net/api/images/rd/v1/ita/aHR0cHM6Ly93d3cucjEwMS5pdC93cC1jb250ZW50L3VwbG9hZHMvMjAyNS8xMi9mYXZpY29uXzcucG5n/-/0/0?r=bfc46bc4af11aab21255ce6bde962fa6"},
+  {n:"R101 ’80",u:"https://icy.unitedradio.it/R10180.aac",m:["https://icecast.unitedradio.it/R10180.aac"],c:"anni",g:"Successi anni ’80",b:"AAC 96",f:"https://img-api.cloud.mediaset.net/api/images/rd/v1/ita/aHR0cHM6Ly93d3cucjEwMS5pdC93cC1jb250ZW50L3VwbG9hZHMvMjAyNS8xMi9mYXZpY29uXzcucG5n/-/0/0?r=bfc46bc4af11aab21255ce6bde962fa6"},
+  {n:"R101 ’90",u:"https://icy.unitedradio.it/R10190.aac",m:["https://icecast.unitedradio.it/R10190.aac"],c:"anni",g:"Successi anni ’90",b:"AAC 96",f:"https://img-api.cloud.mediaset.net/api/images/rd/v1/ita/aHR0cHM6Ly93d3cucjEwMS5pdC93cC1jb250ZW50L3VwbG9hZHMvMjAyNS8xMi9mYXZpY29uXzcucG5n/-/0/0?r=bfc46bc4af11aab21255ce6bde962fa6"},
+  {n:"R101 Made in Italy",u:"https://icy.unitedradio.it/R101MadeInItaly.aac",m:["https://icecast.unitedradio.it/R101MadeInItaly.aac"],c:"anni",g:"Classici italiani",b:"AAC 95",f:"https://img-api.cloud.mediaset.net/api/images/rd/v1/ita/aHR0cHM6Ly93d3cucjEwMS5pdC93cC1jb250ZW50L3VwbG9hZHMvMjAyNS8xMi9mYXZpY29uXzcucG5n/-/0/0?r=bfc46bc4af11aab21255ce6bde962fa6"},
+  {n:"Radio 105 Classics",u:"https://icy.unitedradio.it/105Classics.mp3",m:["https://icecast.unitedradio.it/105Classics.mp3"],c:"anni",g:"Classici pop e dance",b:"MP3 128",f:"https://img-api.cloud.mediaset.net/api/images/rd/v1/ita/aHR0cHM6Ly93d3cuMTA1Lm5ldC93cC1jb250ZW50L3VwbG9hZHMvMjAyNS8wMy9sb2dvX2NvbG9yZWQucG5n/-/0/0?r=7a2735470f07c50e2cbe26fd2470a4e8"},
+  {n:"Radio 70 80 90",u:"https://rblive.it:8020/radio.mp3",c:"anni",g:"Solo musica 70-80-90",b:"MP3 192"},
+  {n:"Radio 70 80 90 Italia",u:"https://rblive.it:8070/radio.mp3",c:"anni",g:"Musica italiana 70-80-90",b:"MP3 192"},
+  {n:"Radio Nostalgia",u:"https://rn1.fluidstream.eu/nostalgia_pv.mp3",c:"anni",g:"Ricordi musicali, italiane",b:"MP3 256",r:"Piemonte"},
+  {n:"Radio Studio Più 60 70 80",u:"https://ice.studiopiu.net/607080.aac",c:"anni",g:"Classici 60-70-80 di Studio Più",b:"AAC",f:"https://www.studiopiu.net/studiopiu/assets/img/icon-192.png",a:"studio+ 607080"},
+  {n:"Classic Hits Radio",u:"https://classichitsradio.streamingmedia.it/play",c:"anni",g:"Grandi successi di sempre",b:"AAC+"},
+  {n:"70 80 Hits",u:"https://nr8.newradio.it:19574/stream",c:"anni",g:"Successi anni 70 e 80",b:"MP3"},
+  {n:"United Music Italia 60",u:"https://icy.unitedradio.it/um014.mp3",c:"anni",g:"Classici italiani anni '60",b:"MP3"},
+  {n:"United Music Italia 70",u:"https://icy.unitedradio.it/um020.mp3",c:"anni",g:"Classici italiani anni '70",b:"MP3"},
+  {n:"United Music Italia 80",u:"https://icy.unitedradio.it/um016.mp3",c:"anni",g:"Classici italiani anni '80",b:"MP3"},
+  {n:"United Music Italia 90",u:"https://icy.unitedradio.it/um018.mp3",c:"anni",g:"Classici italiani anni '90",b:"MP3"},
+  {n:"United Music Italia 2000",u:"https://icy.unitedradio.it/um013.mp3",c:"anni",g:"Successi degli anni 2000",b:"MP3"},
+  {n:"Globo Vintage",u:"https://m100.newradio.it/m100-64",c:"anni",g:"Il meglio degli anni '70, '80 e '90",b:"AAC+",f:"https://static.wixstatic.com/media/cb9577_389d27d8f1214dfba6d28a9381d7ccdc%7emv2.png/v1/fill/w_180%2ch_180%2clg_1%2cusm_0.66_1.00_0.01/cb9577_389d27d8f1214dfba6d28a9381d7ccdc%7emv2.png"},
+  {n:"Gamma Radio Golden Hits",u:"https://rn2.fluidstream.eu/gammaradio.mp3?FLID=1&type=.mp3",c:"anni",g:"I grandi successi di sempre",b:"MP3",r:"Emilia"},
+  {n:"Radio Padova History Italia",u:"https://sphera.fluidstream.eu/rpd_hita.mp3",c:"anni",g:"La storia della musica italiana",b:"MP3",r:"Veneto",f:"https://www.radiopadova.com/history-italia/android-icon-192x192.png"},
+  {n:"Forever 80",u:"https://stream.laut.fm/forever80",c:"anni",g:"Musica anni '80 no-stop",b:"MP3"},
+  {n:"Forever 90",u:"https://stream.laut.fm/forever90",c:"anni",g:"Musica anni '90 no-stop",b:"MP3"},
+  {n:"Radio Italia Anni 60 Emilia",u:"https://ice04.fluidstream.net/ria60_bo.mp3",c:"anni",g:"Anni '60 in Emilia-Romagna",b:"MP3",r:"Emilia",f:"https://www.ria60.it/wp-content/uploads/2024/06/cropped-Logo-RIA60-1-1-180x180.png"},
+  {n:"DeeGay Classic",u:"https://stream.deegay.fm/deegay2.mp3",c:"anni",g:"Dance e pop dei mitici anni",b:"MP3",f:"https://play5.newradio.it/contents/uploads/logo-43441.png"},
+  {n:"Deejay 80",u:"https://4c4b867c89244861ac216426883d1ad0.msvdn.net/webradio/deejay80/playlist.m3u8",c:"anni",g:"Solo musica anni '80",b:"AAC · HLS",h:1,f:"https://www.deejay.it/wp-content/themes/network-deejay/favicon.ico"},
+  {n:"Radio Studio Nord 80 Energia",u:"https://nr6.newradio.it:19393/;",c:"anni",g:"Anni '80 tutto d'un fiato",b:"MP3",r:"Friuli-Venezia Giulia"},
+
+  /* ── NEWS, SPORT & TALK ───────────────────────────────── */
+  /* 20 stazioni */
+  {n:"Rai Radio 1",u:"https://icecdn-19d24861e90342cc8decb03c24c8a419.msvdn.net/icecastRelay/S16355530/Q4zh3NTu28Rx/icecast",m:["https://icestreaming.rai.it/1.mp3"],c:"news",g:"Informazione e approfondimento",b:"MP3 256",f:"https://www.raiplaysound.it/assets/img/icons/apple/apple-touch-icon.png"},
+  {n:"Rai Radio 2",u:"https://icestreaming.rai.it/2.mp3",m:["https://icecdn-19d24861e90342cc8decb03c24c8a419.msvdn.net/icecastRelay/S35942484/yp5F67151K92/icecast"],c:"news",g:"Intrattenimento, musica, talk",b:"MP3 256",f:"https://www.raiplaysound.it/assets/img/icons/apple/apple-touch-icon.png"},
+  {n:"Rai Radio 1 Sport",u:"https://icestreaming.rai.it/13.mp3",c:"news",g:"Sport in diretta 24h",b:"MP3 256",f:"https://www.raiplaysound.it/assets/img/icons/apple/apple-touch-icon.png"},
+  {n:"Radio 24",u:"http://shoutcast2.radio24.it:8000/;",c:"news",g:"Economia, politica e attualità",b:"MP3 64",http:1,f:"https://www.radio24.ilsole24ore.com/whitelabel/group-2420101401040528/img/apple-touch-icon.png"},
+  {n:"Radio Radicale",u:"https://live.radioradicale.it/live.mp3",c:"news",g:"Parlamento, politica, giustizia",b:"MP3"},
+  {n:"Radio Popolare",u:"https://livex.radiopopolare.it/radiopop2",c:"news",g:"Informazione indipendente",b:"AAC 64",r:"Milano"},
+  {n:"Radio Sportiva",u:"https://sportiva.inmystream.it/stream/sportiva",c:"news",g:"Sport e calcio in diretta",b:"AAC+ 36"},
+  {n:"Radio Onda d’Urto",u:"https://hochimin.urtostream.org:8443/radiondadurto.mp3",c:"news",g:"Musica e controinformazione",b:"MP3 80",r:"Brescia"},
+  {n:"Giornale Radio",u:"https://gr.fluidstream.eu/gr1.mp3",c:"news",g:"Informazione e attualità",b:"MP3"},
+  {n:"Giornale Radio Ultima Ora",u:"https://gr.fluidstream.eu/gr2.mp3",c:"news",g:"Notizie in tempo reale",b:"MP3"},
+  {n:"Rai Isoradio",u:"https://icecdn-19d24861e90342cc8decb03c24c8a419.msvdn.net/icecastRelay/S3822289/9T4F68Q3/icecast",c:"news",g:"Informazione e viabilità",b:"MP3",f:"https://www.raiplaysound.it/assets/img/icons/apple/apple-touch-icon.png"},
+  {n:"Radio RaiSport",u:"https://icecdn-19d24861e90342cc8decb03c24c8a419.msvdn.net/icecastRelay/S74167340/mQph1sdWBtSp/icecast",c:"news",g:"Tutto lo sport Rai",b:"MP3",f:"https://static.mytuner.mobi/media/tvos_radios/ramgajabuhqm.jpg"},
+  {n:"Retesport",u:"https://icecast.ithost.it/retesport.ogg",c:"news",g:"Sport e calcio dalla Capitale",b:"AAC+",r:"Lazio"},
+  {n:"Radio Manà Manà Sport",u:"https://stream10.xdevel.com/audio2s975363-2142/stream/icecast.audio",c:"news",g:"Sport, calcio e romanismo",b:"AAC+",r:"Lazio"},
+  {n:"Radio Romanista",u:"https://romanista.newradio.it/stream",c:"news",g:"Tifo e passione giallorossa",b:"AAC+",r:"Lazio"},
+  {n:"Radio Bianconera",u:"https://stream.tmwradio.com/bianconera.aac",c:"news",g:"Il mondo Juventus",b:"AAC+",r:"Piemonte",f:"https://players.fluidstream.it/RadioBiancoNera/icon.png"},
+  {n:"TMW Radio",u:"https://stream.tmwradio.com/tmw.aac",c:"news",g:"Calciomercato e sport",b:"AAC+"},
+  {n:"Italia News 24",u:"https://stream6.xdevel.com/audio6s975889-649/stream/icecast.audio",c:"news",g:"Notizie dall'Italia 24h",b:"MP3"},
+  {n:"LifeGate Radio",u:"https://router.xdevel.com/audio0s975809-345/stream/icecast.audio",c:"news",g:"Ecologia, ambiente e società",b:"MP3",r:"Milano",f:"https://www.fm-world.it/wp-content/uploads/2019/04/liferadio.png"},
+  {n:"Rai News 24",u:"https://streamcdnb3-8e7439fdb1694c8da3a0fd63e4dda518.msvdn.net/rainews1/hls/rainews_2400/chunklist.m3u8",c:"news",g:"Informazione continua (audio TV)",b:"AAC · HLS",h:1,f:"https://www.raiplaysound.it/assets/img/icons/apple/apple-touch-icon.png"},
+
+  /* ── CLASSICA, LOUNGE & RELAX ─────────────────────────── */
+  /* 28 stazioni */
+  {n:"Rai Radio 3",u:"https://icestreaming.rai.it/3.mp3",m:["https://icecdn-19d24861e90342cc8decb03c24c8a419.msvdn.net/icecastRelay/S56630579/yEbkcBtIoSwd/icecast"],c:"class",g:"Cultura, musica classica, radio3",b:"MP3 320",f:"https://www.raiplaysound.it/assets/img/icons/apple/apple-touch-icon.png"},
+  {n:"Rai Radio 3 Classica",u:"https://icecdn-19d24861e90342cc8decb03c24c8a419.msvdn.net/icecastRelay/S53422322/bTdUFhYMnnra/icecast",m:["https://icestreaming.rai.it/5.mp3"],c:"class",g:"Filodiffusione: musica classica e lirica",b:"MP3 256",f:"https://www.raiplaysound.it/assets/img/icons/apple/apple-touch-icon.png"},
+  {n:"Rai Radio Tutta Italiana",u:"https://icestreaming.rai.it/4.mp3",c:"class",g:"Canzone italiana d’autore",b:"MP3 256",f:"https://www.raiplaysound.it/assets/img/icons/apple/apple-touch-icon.png"},
+  {n:"Rai Radio Techetè",u:"https://icestreaming.rai.it/9.mp3",c:"class",g:"Archivio storico della radio",b:"MP3 256",f:"https://www.raiplaysound.it/assets/img/icons/apple/apple-touch-icon.png"},
+  {n:"Rai Radio Kids",u:"https://icestreaming.rai.it/11.mp3",c:"class",g:"Musica e storie per bambini",b:"MP3 256",f:"https://www.raiplaysound.it/assets/img/icons/apple/apple-touch-icon.png"},
+  {n:"Radio Classica",u:"https://stream10.xdevel.com/audio0s978096-2470/stream/icecast.audio",c:"class",g:"Musica classica e lirica",b:"MP3"},
+  {n:"RMC Buddha Bar",u:"https://icy.unitedradio.it/rmcweb002",m:["https://icecast.unitedradio.it/rmcweb002"],c:"class",g:"Lounge e atmosfere chill-out",b:"MP3",f:"https://img-api.cloud.mediaset.net/api/images/rd/v1/ita/aHR0cHM6Ly93d3cucmFkaW9tb250ZWNhcmxvLm5ldC93cC1jb250ZW50L3VwbG9hZHMvMjAyNS8wNS9jcm9wcGVkLWZhdmljb25fMS0xLnBuZw/-/0/0?r=073a79d0fa661589553336655a8ac844"},
+  {n:"RMC Cool",u:"https://icy.unitedradio.it/rmcweb008",m:["https://icecast.unitedradio.it/rmcweb008"],c:"class",g:"Soul, funk e smooth",b:"MP3",f:"https://img-api.cloud.mediaset.net/api/images/rd/v1/ita/aHR0cHM6Ly93d3cucmFkaW9tb250ZWNhcmxvLm5ldC93cC1jb250ZW50L3VwbG9hZHMvMjAyNS8wNS9jcm9wcGVkLWZhdmljb25fMS0xLnBuZw/-/0/0?r=073a79d0fa661589553336655a8ac844"},
+  {n:"RMC Great Artists",u:"https://icy.unitedradio.it/rmcweb003",m:["https://icecast.unitedradio.it/rmcweb003"],c:"class",g:"I grandi artisti internazionali",b:"MP3",f:"https://img-api.cloud.mediaset.net/api/images/rd/v1/ita/aHR0cHM6Ly93d3cucmFkaW9tb250ZWNhcmxvLm5ldC93cC1jb250ZW50L3VwbG9hZHMvMjAyNS8wNS9jcm9wcGVkLWZhdmljb25fMS0xLnBuZw/-/0/0?r=073a79d0fa661589553336655a8ac844"},
+  {n:"RMC Marine",u:"https://icy.unitedradio.it/rmcweb011",m:["https://icecast.unitedradio.it/rmcweb011"],c:"class",g:"Relax e mondo del mare",b:"MP3",f:"https://img-api.cloud.mediaset.net/api/images/rd/v1/ita/aHR0cHM6Ly93d3cucmFkaW9tb250ZWNhcmxvLm5ldC93cC1jb250ZW50L3VwbG9hZHMvMjAyNS8wNS9jcm9wcGVkLWZhdmljb25fMS0xLnBuZw/-/0/0?r=073a79d0fa661589553336655a8ac844"},
+  {n:"RDS Relax",u:"https://stream.rds.radio/audio/rdsrelax.stream_aac/playlist.m3u8",m:["https://icstream.rds.radio/rdsrelax","https://stream.rds.radio/audio/rdsrelax.stream_aac/chunklist.m3u8"],c:"class",g:"Solo musica rilassante",b:"AAC 129 · HLS",h:1,f:"https://media.rds.it/web/web-site-brandnew/RDS.jpg"},
+  {n:"Lolliradio Soft",u:"https://stream.lolliradio.net/lolli_soft.aac",c:"class",g:"Melodie soft e rilassanti",b:"AAC",f:"https://lolliradio.net/wp-content/uploads/2025/11/Logo-Lolli-20-anni_3000x3000-px-370x370.png"},
+  {n:"Dimensione Suono Soft",u:"https://stream.dimensionesuonosoft.radio/audio/dssc.stream_aac64/playlist.m3u8",m:["https://stream.dimensionesuonosoft.radio/audio/dssc.stream_aac/master.m3u8"],c:"class",g:"Solo musica dolce e rilassante",b:"AAC · HLS",h:1},
+  {n:"Radio Volami nel Cuore",u:"https://rci.canaleitalia.tv:8009/;",c:"class",g:"Musica melodica e romantica",b:"AAC"},
+  {n:"United Music Amore",u:"https://icy.unitedradio.it/um012.mp3",c:"class",g:"Canzoni d'amore italiane",b:"MP3"},
+  {n:"United Music Cinema",u:"https://icy.unitedradio.it/um058.mp3",c:"class",g:"Colonne sonore e film",b:"MP3"},
+  {n:"Venice Classic Radio",u:"https://uk2.streamingpulse.com/ssl/vcr1",c:"class",g:"Musica classica da Venezia",b:"MP3",r:"Veneto"},
+  {n:"Venice Classic Radio Auditorium",u:"https://uk2.streamingpulse.com/ssl/vcr2",c:"class",g:"Grandi concerti classici",b:"MP3",r:"Veneto"},
+  {n:"Radio Relax Italia",u:"https://radiorelax.streamingmedia.it/play",c:"class",g:"Musica rilassante no-stop",b:"AAC"},
+  {n:"Romantica Radio",u:"https://vetrina.multi-radio.com/romanticaradio",c:"class",g:"Le più belle canzoni d'amore",b:"AAC+"},
+  {n:"Lattemiele",u:"https://sr15.inmystream.it/stream/lattemiele",m:["https://sr15.inmystream.it:8000/stream"],c:"class",g:"Musica dolce e parole gentili",b:"MP3",f:"https://www.lattemiele.com/wp-content/uploads/2020/07/cropped-logo-autore-lm-192x192.png"},
+  {n:"RMC Acoustic",u:"https://icy.unitedradio.it/rmcweb016",c:"class",g:"Acustico e unplugged",b:"MP3",f:"https://img-api.cloud.mediaset.net/api/images/rd/v1/ita/aHR0cHM6Ly93d3cucmFkaW9tb250ZWNhcmxvLm5ldC93cC1jb250ZW50L3VwbG9hZHMvMjAyNS8wNS9jcm9wcGVkLWZhdmljb25fMS0xLnBuZw/-/0/0?r=073a79d0fa661589553336655a8ac844"},
+  {n:"Musica Jazz Radio",u:"https://ice16.fluidstream.net/mjr.mp3",c:"class",g:"Jazz italiano e internazionale",b:"MP3",f:"https://musicajazz.it/wp-content/uploads/logo-120.png"},
+  {n:"Easy Network Jazz & Soul",u:"https://sphera.fluidstream.eu/easy_jazz.mp3",c:"class",g:"Jazz, soul e black music",b:"MP3"},
+  {n:"Nature Radio Sleep",u:"https://az1.mediacp.eu/listen/natureradiosleep/radio.mp3",c:"class",g:"Suoni e musiche per dormire",b:"MP3",f:"https://d1ujqdpfgkvqfi.cloudfront.net/favicon-generator/htdocs/favicons/2025-03-01/fb714c8d8238b02673a9ee2b018528af.ico.png"},
+  {n:"Electro Lounge",u:"https://electrolounge.stream.laut.fm/electrolounge",c:"class",g:"Lounge ed elettronica soft",b:"MP3"},
+  {n:"Kiss Kiss History Lounge",u:"https://kk.fluidstream.eu/kk_history_lounge.mp3",c:"class",g:"Lounge e rilassamento",b:"MP3",f:"https://kisskiss.it/wp-content/uploads/elementor/thumbs/history_lounge-pqfun57h0y154wockpdaik12g4hic80slnznyc9zqk.png"},
+
+  /* ── REGIONALI ────────────────────────────────────────── */
+  /* 21 stazioni */
+  {n:"Radio Lombardia",u:"https://stream6.xdevel.com/audio0s976574-1328/stream/icecast.audio",c:"reg",g:"Informazione e musica lombarda",b:"AAC+",r:"Lombardia",f:"https://www.radiolombardia.it/wp-content/uploads/2024/05/LOGO_bianco-1-1024x1024.png"},
+  {n:"Radio 51",u:"https://ice04.fluidstream.net/fluid0406.aac",c:"reg",g:"Musica e territorio",b:"AAC 96",r:"Bergamo"},
+  {n:"Radio Bruno",u:"https://router.xdevel.com/audio4s975355-254/stream/icecast.audio",c:"reg",g:"Pop italiano, eventi e sport",b:"AAC+",r:"Emilia",f:"https://www.radiobruno.it/wp-content/uploads/2023/10/cropped-logo-radiobruno-favicon-512-512-180x180.png"},
+  {n:"Radio Gamma Stereo",u:"https://gammastereo.meway.host/stream",c:"reg",g:"Hit e informazione locale",b:"MP3 192",r:"Emilia"},
+  {n:"Radio Venezia",u:"https://audio.streamshow.it/proxy/rveradiocheballa?mp=/stream",c:"reg",g:"Musica e gossip dal Veneto",b:"MP3 128",r:"Veneto"},
+  {n:"Radio Antenna 1",u:"https://sr11.inmystream.it/proxy/associa9?mp=/stream",c:"reg",g:"Musica e comunità locale",b:"MP3 192",r:"Umbria"},
+  {n:"Radio Napoli Doc",u:"https://ice08.fluidstream.net/RadioNapoli.aac",c:"reg",g:"Musica napoletana e hit",b:"AAC 64",r:"Campania"},
+  {n:"Radio Studio Più Puglia",u:"https://ice.studiopiu.net/puglia.aac",c:"reg",g:"La dance di Studio Più in Puglia",b:"AAC",r:"Puglia",f:"https://www.studiopiu.net/studiopiu/assets/img/icon-192.png",a:"studio+ puglia"},
+  {n:"Radio Studio Più Sicilia",u:"https://ice.studiopiu.net/sicilia.aac",c:"reg",g:"La dance di Studio Più in Sicilia",b:"AAC",r:"Sicilia",f:"https://www.studiopiu.net/studiopiu/assets/img/icon-192.png",a:"studio+ sicilia"},
+  {n:"Radio Studio Più Verona",u:"https://ice.studiopiu.net/verona.aac",c:"reg",g:"Studio Più per il Veneto",b:"AAC",r:"Veneto",f:"https://www.studiopiu.net/studiopiu/assets/img/icon-192.png",a:"studio+ verona"},
+  {n:"United Music Viva Napoli",u:"https://icy.unitedradio.it/um017.mp3",c:"reg",g:"La canzone napoletana",b:"MP3",r:"Campania"},
+  {n:"Radio Marte",u:"https://stream1.xdevel.com/audio0s975753-313/stream/icecast.audio",c:"reg",g:"Musica napoletana e hit",b:"MP3",r:"Campania",f:"https://www.radiomarte.it/wp-content/uploads/2025/01/cropped-Favicon-1-1-180x180.png"},
+  {n:"Radio Globo",u:"https://globo.newradio.it/globorm64",c:"reg",g:"Successi e informazione da Roma",b:"MP3",r:"Lazio",f:"https://radioglobo.it/wp-content/uploads/2023/05/radio_globo_player_512x512-370x370.png"},
+  {n:"NBC Milano",u:"https://nr7.newradio.it:19350/stream",c:"reg",g:"La radio di Milano",b:"MP3",r:"Milano",f:"https://www.70-80.it/wp-content/uploads/2020/03/logo-70-80-75x75.jpg"},
+  {n:"Milano XR",u:"https://milanoxr.gatesweb.info:8443/live",c:"reg",g:"Musica e cultura milanese",b:"AAC+",r:"Milano",f:"https://milanoxr.gatesweb.info:8443/milanoxr_logo-300-sq.jpg"},
+  {n:"Radio Gemini",u:"https://geminione.it/proxy/gemini/stream",c:"reg",g:"Radio locale e musica",b:"AAC+",r:"Lazio"},
+  {n:"Südtirol 1",u:"https://stream.suedtirol1.it/live/aac-64/app/",c:"reg",g:"La radio dell'Alto Adige",b:"AAC",r:"Trentino-Alto Adige",f:"https://www.suedtirol1.it/favicon.ico"},
+  {n:"Radio Padova",u:"https://sphera.fluidstream.eu/rpd_history.mp3",c:"reg",g:"Musica e territorio veneto",b:"MP3",r:"Veneto",f:"https://www.radiopadova.com/wp-content/uploads/2025/06/radio-padova-icon-300x300.png"},
+  {n:"Radio Studio Nord",u:"https://nr6.newradio.it:19104/;",c:"reg",g:"Radio del Friuli",b:"MP3",r:"Friuli-Venezia Giulia"},
+  {n:"RSC Radio Studio Centrale",u:"https://stream.studiocentrale.it/radio/8020/radio.mp3?_=1",c:"reg",g:"Radio siciliana",b:"MP3",r:"Sicilia"},
+  {n:"Radio Cortina",u:"https://streaming1.radiodatanet.it:8050/stream",c:"reg",g:"Dalla montagna: musica e info",b:"MP3",r:"Veneto"},
+
+  /* ── RELIGIOSE ────────────────────────────────────────── */
+  /* 1 stazioni */
+  {n:"Radio Maria",u:"https://dreamsiteradiocp4.com/proxy/rmitaliamontecarlo?mp=/stream",m:["http://dreamsiteradiocp.com:8092/;"],c:"rel",g:"Preghiera e programmi religiosi",b:"AAC+ 64"},
+];
+
+/* ── utilità ──────────────────────────────────────────── */
+const $ = s => document.querySelector(s);
+const audio = $("#audio");
+const KEY_FAV = "ri_favs_v4", KEY_VOL = "ri_vol_v4", KEY_LAST = "ri_last_v4", KEY_REC = "ri_rec_v4";
+const N_ST = STATIONS.length;
+const MAX_TRIES = 6;        // tentativi per stazione (stream principale + riserve)
+const WATCHDOG_MS = 15000;  // se non arriva audio entro 15 s si cambia stream
+
+const hashHue = s => { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 360; return h; };
+/* iniziali per il monogramma: "RTL 102.5 News" → 102N · "R101 ’80" → R80 */
+const initials = s => {
+  const base = s.replace(/[\u2019'`]/g, "'");
+  if (/^R101/i.test(base)) { const y = base.match(/'(\d{2})/); return y ? "R" + y[1] : "R101"; }
+  if (/^(RTL|RDS|RMC)\b/.test(base) && /%/.test(base)) return base.slice(0, 3);
+  let m = base.match(/^[A-Za-z0-9]+\s+(\d{2,3}(?:\.\d)?)\s+([A-Za-z].*)$/);
+  if (m) return m[1].slice(0, 3) + m[2][0].toUpperCase();
+  m = base.match(/'\s?(\d{2})/);
+  if (m) return base[0].toUpperCase() + m[1];
+  let t = base;
+  for (let k = 0; k < 4; k++){
+    const before = t;
+    t = t.replace(/^(Radio|Rai|RTL|RDS|RMC|Virgin Radio|Virgin)\s+/i, "").trim();
+    if (t === before) break;
+  }
+  if (/^(radio|rai|rtl|rds|rmc|virgin)$/i.test(t)) t = base;
+  m = t.match(/^(\d{1,3}(?:\.\d)?)/);
+  if (m){
+    const num = m[1].split(".")[0], rest = t.slice(m[1].length).trim();
+    const lead = num.length >= 2 ? num : "R" + num;
+    return /^[A-Za-z]/.test(rest) ? lead + rest[0].toUpperCase() : lead;
+  }
+  const toks = t.split(/[\s&·]+/).filter(Boolean);
+  const alpha = toks.filter(w => /[A-Za-z]/.test(w)), nums = toks.filter(w => /^\d/.test(w));
+  if (alpha.length >= 2) return (alpha[0][0] + alpha[1][0]).toUpperCase();
+  if (alpha.length === 1 && nums.length) return (alpha[0][0] + nums[0][0]).toUpperCase();
+  if (alpha.length === 1) return alpha[0].slice(0, 2).toUpperCase();
+  return (t + "  ").slice(0, 2).toUpperCase();
+};
+const catLabel = k => (CATS.find(c => c[0] === k) || ["", "Altro"])[1];
+const fmt = i => STATIONS[i];
+const isHlsUrl = u => /\.m3u8(\?|#|$)/i.test(u);
+const isLocalPage = () => location.protocol === "file:" || /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+const mixedBlocked = u => location.protocol === "https:" && u.startsWith("http:") && !isLocalPage();
+/* su mobile gli stream diretti (MP3/AAC) sopravvivono meglio in background dell'HLS via MSE */
+const isMobile = (function(){
+  try {
+    return (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) ||
+           /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || "");
+  } catch(e){ return false; }
+})();
+
+/* ── stato ────────────────────────────────────────────── */
+const S = {
+  idx: -1, playing: false, hls: null, vol: 0.8, muted: false,
+  favs: new Set(), recents: [], cat: "all", query: "", sleepAt: 0,
+  want: false,        /* l’utente vuole sentire la radio */
+  userPaused: false   /* pausa chiesta dall’utente, non dal sistema */
+};
+const SR = {
+  gen: 0, tries: [], k: 0, active: false, watch: null, played: false,
+  switching: false, gM: true, tTimer: null,
+  bg: false,          /* pagina in background */
+  pendingFail: false, /* guasto rimandato a quando torniamo visibili */
+  revive: 0, reviveTimer: null
+};
+
+try { S.favs = new Set(JSON.parse(localStorage.getItem(KEY_FAV) || "[]")); } catch(e){}
+try { S.recents = JSON.parse(localStorage.getItem(KEY_REC) || "[]"); } catch(e){}
+const saveFavs  = () => { try { localStorage.setItem(KEY_FAV, JSON.stringify([...S.favs])); } catch(e){} };
+const saveVol   = () => { try { localStorage.setItem(KEY_VOL, String(S.vol)); } catch(e){} };
+const saveLast  = i => { try { localStorage.setItem(KEY_LAST, String(i)); } catch(e){} };
+const saveRec   = () => { try { localStorage.setItem(KEY_REC, JSON.stringify(S.recents)); } catch(e){} };
+
+/* ── log della diagnostica ───────────────────────────── */
+const LOG = [];
+function log(msg, cls){
+  const t = new Date().toLocaleTimeString("it-IT", { hour12: false });
+  LOG.push({ t, msg, cls: cls || "" });
+  if (LOG.length > 400) LOG.shift();
+  const box = $("#log");
+  if (box){
+    const d = document.createElement("div");
+    d.className = cls || "";
+    d.textContent = "[" + t + "] " + msg;
+    box.appendChild(d);
+    while (box.childElementCount > 400) box.removeChild(box.firstChild);
+    box.scrollTop = box.scrollHeight;
+  }
+}
+
+/* ── orologio ─────────────────────────────────────────── */
+function tick(){
+  const d = new Date();
+  $("#clock").textContent = d.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
+  $("#day").textContent = d.toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" });
+}
+setInterval(tick, 1000); tick();
+
+/* ── hls.js: caricato solo se serve, con tre CDN di riserva ── */
+let hlsLoading = null;
+function loadHls(){
+  if (window.Hls) return Promise.resolve(true);
+  if (hlsLoading) return hlsLoading;
+  const cdns = [
+    "https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js",
+    "https://unpkg.com/hls.js@1.5.17/dist/hls.min.js",
+    "https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.17/hls.min.js"
+  ];
+  hlsLoading = new Promise(resolve => {
+    let i = 0;
+    const next = () => {
+      if (window.Hls) return resolve(true);
+      if (i >= cdns.length){ log("hls.js non caricato da nessuna CDN (rete filtrata?)", "e"); return resolve(false); }
+      const s = document.createElement("script");
+      s.src = cdns[i++];
+      s.onload = () => { log("hls.js caricato da " + s.src.split("/")[2], "s"); resolve(true); };
+      s.onerror = () => { log("CDN non raggiungibile, provo la successiva", "w"); next(); };
+      document.head.appendChild(s);
+    };
+    next();
+    setTimeout(() => { if (!window.Hls) resolve(false); }, 12000);
+  });
+  return hlsLoading;
+}
+
+/* ── ricerca: ignora accenti, maiuscole e simboli ("Studio+" trova "Studio Più") ── */
+const fold = s => (s || "").toLowerCase()
+  .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+  .replace(/\+/g, " piu ").replace(/&/g, " e ")
+  .replace(/[^a-z0-9]+/g, "");
+function matchStation(st, q){
+  if (!q) return true;
+  const hay = fold(st.n) + " " + fold(st.g) + " " + fold(st.r || "") + " " + fold(st.a || "");
+  const needle = fold(q);
+  return needle.split(" ").filter(Boolean).every(t => hay.includes(t));
+}
+
+/* ── ordine: A-Z oppure per popolarità (più cliccate) ── */
+let SORT = "az";
+
+/* ── stato UI: barra in basso, card, messaggi ─────────────────────────── */
+const PLAY_ICON = '<path d="M8 5v14l11-7z"/>';
+const PAUSE_ICON = '<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>';
+const TEST = {};
+const KEY_CNT = "ri_counts_v3";
+let COUNTS = {};
+try { COUNTS = JSON.parse(localStorage.getItem(KEY_CNT) || "{}"); } catch(e){ COUNTS = {}; }
+const saveCounts = () => { try { localStorage.setItem(KEY_CNT, JSON.stringify(COUNTS)); } catch(e){} };
+
+function setStatus(kind, text){
+  $("#status").className = "pstatus" + (kind ? " " + kind : "");
+  $("#statustext").textContent = text;
+}
+
+function logoFor(st){ return st && st.f ? st.f : ""; }
+
+function fillLogo(box, st, big){
+  /* box contiene sempre il monogramma; sopra ci va il logo, se esiste e carica */
+  const mono = box.querySelector(".mono");
+  const img  = box.querySelector("img");
+  const ini  = initials(st.n);
+  mono.textContent = ini;
+  mono.className = "mono" + (ini.length >= 4 ? " s4" : ini.length === 3 ? " s3" : "");
+  mono.style.background = big ? "#3a3f4a" : monoColor(st.n);
+  const url = logoFor(st);
+  if (url && img){
+    img.classList.remove("off");
+    img.onerror = () => img.classList.add("off");
+    if (img.getAttribute("src") !== url) img.src = url;
+  } else if (img){
+    img.classList.add("off"); img.removeAttribute("src");
+  }
+}
+/* colore del monogramma: sobrio, derivato dal nome ma desaturato */
+function monoColor(name){
+  const h = hashHue(name);
+  return `hsl(${h} 18% 46%)`;
+}
+
+function renderPlayer(){
+  const st = S.idx >= 0 ? fmt(S.idx) : null;
+  const tile = $("#ptile");
+  if (st){
+    fillLogo(tile, st, true);
+    $("#pname").textContent = st.n;
+    $("#psub").textContent = st.g + (st.r ? " · " + st.r : "") + " · " + st.b;
+  } else {
+    const mono = tile.querySelector(".mono"), img = tile.querySelector("img");
+    mono.textContent = "R"; mono.className = "mono"; mono.style.background = "#3a3f4a";
+    if (img){ img.classList.add("off"); img.removeAttribute("src"); }
+    $("#pname").textContent = "Nessuna stazione selezionata";
+    $("#psub").textContent = "Seleziona una radio per iniziare";
+  }
+  $("#playicon").outerHTML = '<svg id="playicon" viewBox="0 0 24 24">' + (S.playing ? PAUSE_ICON : PLAY_ICON) + "</svg>";
+  const fb = $("#fav");
+  fb.setAttribute("aria-pressed", st && S.favs.has(st.n) ? "true" : "false");
+  fb.style.color = (st && S.favs.has(st.n)) ? "#d0021b" : "";
+  $("#viatxt").textContent = SR.k > 0 && (S.playing || SR.active) ? "via riserva " + SR.k : "";
+  updateMediaSession(st);
+  try { if ("mediaSession" in navigator) navigator.mediaSession.playbackState = S.playing ? "playing" : "paused"; } catch(e){}
+  document.querySelectorAll("#grid .st").forEach(el => el.classList.toggle("on", +el.dataset.i === S.idx));
+  document.querySelectorAll("#recents button").forEach(el => el.classList.toggle("on", +el.dataset.i === S.idx));
+}
+
+function updateMediaSession(st){
+  if (!("mediaSession" in navigator)) return;
+  if (!st){ try{ navigator.mediaSession.metadata = null; }catch(e){} return; }
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512"><rect width="512" height="512" rx="72" fill="#333"/>` +
+    `<text x="50%" y="55%" font-family="Helvetica,Arial" font-size="200" font-weight="bold" fill="#fff" text-anchor="middle" dominant-baseline="middle">${initials(st.n)}</text></svg>`;
+  try{
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: st.n, artist: st.g + " · Radio Italiane", album: "Radio Italiane",
+      artwork: [{src:"data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg), sizes:"512x512", type:"image/svg+xml"}]
+    });
+  }catch(e){}
+}
+
+/* ── motore di riproduzione ───────────────────────────── */
+function urlsFor(st){
+  const uniq = [...new Set([st.u, ...(st.m || [])])];
+  const https = (location.protocol === "https:")
+    ? uniq.filter(u => !u.startsWith("http:")).concat(uniq.filter(u => u.startsWith("http:")))
+    : uniq;
+  if (isMobile){
+    const direct = https.filter(u => !isHlsUrl(u)), hls = https.filter(u => isHlsUrl(u));
+    return direct.concat(hls);
+  }
+  return https;
+}
+function clearWatchdog(){ if (SR.watch){ clearTimeout(SR.watch); SR.watch = null; } }
+
+/* pausa chiesta dall’utente (pulsante, spazio, card, cuffie) */
+function pauseByUser(){
+  S.userPaused = true; S.want = false; SR.pendingFail = false; SR.revive = 0;
+  clearTimeout(SR.reviveTimer);
+  try { audio.pause(); } catch(e){}
+}
+/* BACKGROUND: non si cambia stream e non si mette in pausa.
+   Si riprova a far ripartire lo stesso flusso, con attese crescenti. */
+function reviveSoon(force){
+  if (!S.want || S.userPaused) return;
+  if (!audio.src && !S.hls) return;                 // sorgente in fase di sostituzione
+  if (SR.revive >= 6) return;
+  SR.revive++;
+  clearTimeout(SR.reviveTimer);
+  const delay = force ? 350 : Math.min(1200 * Math.pow(1.6, SR.revive - 1), 10000);
+  SR.reviveTimer = setTimeout(() => {
+    if (!S.want || S.userPaused) return;
+    try { if (S.hls && S.hls.startLoad) S.hls.startLoad(-1); } catch(e){}
+    const p = audio.play();
+    if (p && p.catch) p.catch(() => {});            // riproverà al giro successivo
+  }, delay);
+}
+/* comandi di sistema: cuffie, notifica, schermata di blocco */
+function setupMediaSession(){
+  if (!("mediaSession" in navigator)) return;
+  const ms = navigator.mediaSession;
+  if (!ms) return;
+  const acts = {
+    play:          () => { S.userPaused = false; S.want = true; (S.idx < 0) ? tune(visibleIndices()[0] || 0) : startPlay(SR.gen); },
+    pause:         () => pauseByUser(),
+    stop:          () => pauseByUser(),
+    nexttrack:     () => step(1),
+    previoustrack: () => step(-1)
+  };
+  for (const k in acts){ try { ms.setActionHandler(k, acts[k]); } catch(e){} }
+}
+
+function stopPlayback(){
+  SR.active = false; SR.switching = true; SR.gen++;
+  clearWatchdog();
+  try { if (S.hls) { S.hls.destroy(); S.hls = null; } } catch(e){}
+  try { audio.pause(); } catch(e){}
+  audio.removeAttribute("src");
+  try { audio.load(); } catch(e){}
+  S.playing = false;
+}
+function hardError(msg){
+  SR.active = false; SR.switching = false; clearWatchdog();
+  S.playing = false; renderPlayer();
+  setStatus("err", msg);
+  log("errore — " + (S.idx >= 0 ? fmt(S.idx).n + ": " : "") + msg, "e");
+}
+
+/* sintonizza una stazione */
+function tune(i, autoplay = true){
+  const st = fmt(i);
+  S.idx = i; saveLast(i);
+  COUNTS[st.n] = (COUNTS[st.n] || 0) + 1; saveCounts();
+  S.want = true; S.userPaused = false; SR.pendingFail = false; SR.revive = 0;
+  clearTimeout(SR.reviveTimer);
+  if (AUTO_TEST){ AUTO_TEST = false; TESTING = false; }   // il test non deve disturbare l’ascolto
+  stopPlayback();
+  S.recents = [i, ...S.recents.filter(x => x !== i)].slice(0, 8); saveRec(); renderRecents();
+  renderPlayer();
+
+  SR.gen++;
+  const gen = SR.gen;
+  SR.gM = autoplay;
+  const urls = urlsFor(st);
+  SR.tries = [...urls, ...urls].slice(0, MAX_TRIES);
+  SR.k = 0;
+  log("ascolto " + st.n + " — " + urls.length + " stream disponibili" + (urls.length > 1 ? ", " + (urls.length > 2 ? (urls.length - 1) + " di riserva" : "1 di riserva") : ""), "d");
+
+  if (!urls.length){ hardError("Nessuno stream disponibile per questa stazione."); return; }
+  nextTry(gen, 0);
+}
+
+/* prova lo stream successivo della lista */
+function nextTry(gen, delay){
+  if (gen !== SR.gen) return;
+  clearTimeout(SR.tTimer);
+  SR.tTimer = setTimeout(() => {
+    if (gen !== SR.gen) return;
+    if (SR.k >= SR.tries.length){
+      const st = fmt(S.idx);
+      const hint = (st.http && location.protocol === "https:")
+        ? " Radio 24 trasmette solo in HTTP: apri il file dal disco (non da una pagina HTTPS)."
+        : " Il server non risponde dalla tua rete: controlla connessione, VPN o adblock, oppure prova un’altra stazione.";
+      hardError("Stream non raggiungibile dopo " + SR.tries.length + " tentativi." + hint);
+      return;
+    }
+    const url = SR.tries[SR.k];
+    if (mixedBlocked(url)){ log("salto " + url + " (contenuto http su pagina https)", "w"); SR.k++; nextTry(gen, 60); return; }
+    if (SR.k > 0) log("nuovo tentativo (" + (SR.k + 1) + "): " + url, "w");
+    loadUrl(url, gen, Math.floor(SR.k / urlsFor(fmt(S.idx)).length) + 1);
+  }, delay || 0);
+}
+
+function loadUrl(url, gen, round){
+  const st = fmt(S.idx);
+  SR.active = true; SR.played = false; SR.switching = false;
+  setStatus("buf", (round > 1 ? "Provo lo stream di riserva (" + round + ") · " : "Connessione a ") + st.n + "…");
+
+  /* HLS: Safari/iOS lo legge da solo, sugli altri browser serve hls.js */
+  if (isHlsUrl(url)){
+    const nativeOk = !!audio.canPlayType("application/vnd.apple.mpegurl");
+    if (nativeOk){
+      audio.src = url; log("HLS nativo: " + url, "d");
+      if (SR.gM) startPlay(gen);
+      armWatchdog(gen, url);
+      return;
+    }
+    loadHls().then(ok => {
+      if (gen !== SR.gen || !SR.active) return;
+      if (ok && window.Hls && Hls.isSupported()){
+        try{
+          S.hls = new Hls({ enableWorker: true, lowLatencyMode: false, backBufferLength: 30,
+                            manifestLoadingTimeOut: 10000, levelLoadingTimeOut: 10000, fragLoadingTimeOut: 20000 });
+          S.hls.on(Hls.Events.ERROR, (ev, data) => {
+            if (!data) return;
+            if (data.fatal){
+              log("HLS in errore: " + data.type + "/" + data.details, "e");
+              handleFail(gen, "HLS " + data.details);
+            } else if (data.details === "bufferStalledError" || data.type === Hls.ErrorTypes.NETWORK_ERROR){
+              log("HLS avviso: " + data.details, "w");
+              if (document.hidden || SR.bg) reviveSoon(false);
+            }
+          });
+          S.hls.loadSource(url);
+          S.hls.attachMedia(audio);
+          log("HLS via hls.js: " + url, "d");
+        }catch(e){
+          log("hls.js non è partito: " + e.message, "e");
+          handleFail(gen, "hls init"); return;
+        }
+        if (SR.gM) startPlay(gen);
+        armWatchdog(gen, url);
+      } else {
+        log("hls.js non disponibile: non riesco a leggere " + url, "e");
+        handleFail(gen, "hls.js non disponibile");
+      }
+    });
+    return;
+  }
+
+  /* stream diretto (MP3/AAC/OGG) */
+  audio.src = url;
+  log("stream diretto: " + url, "d");
+  if (SR.gM) startPlay(gen);
+  armWatchdog(gen, url);
+}
+
+function startPlay(gen){
+  const p = audio.play();
+  if (p && p.catch) p.catch(err => {
+    if (gen !== SR.gen) return;
+    if (err && err.name === "NotAllowedError"){
+      if (document.hidden || SR.bg){ reviveSoon(false); return; }   // in background è normale: riprova
+      SR.active = false; clearWatchdog();
+      setStatus("", "Premi play per ascoltare (avvio automatico bloccato dal browser)");
+      S.playing = false; renderPlayer();
+    } else if (err && err.name === "AbortError"){
+      /* cambio rapido di sorgente: si ignora */
+    } else {
+      log("play() è fallito: " + (err && err.name) + " " + ((err && err.message) || ""), "w");
+      handleFail(gen, (err && err.name) || "play");
+    }
+  });
+}
+
+function armWatchdog(gen, url){
+  clearWatchdog();
+  if (document.hidden || SR.bg) return;     // in background nessun cambio stream
+  SR.watch = setTimeout(() => {
+    if (gen !== SR.gen || !SR.active || SR.played) return;
+    log("nessun audio dopo " + Math.round(WATCHDOG_MS / 1000) + " s: provo un altro stream", "w");
+    handleFail(gen, "timeout");
+  }, WATCHDOG_MS);
+}
+
+/* guasto di un tentativo */
+function handleFail(gen, why){
+  if (gen !== SR.gen) return;
+  /* App in background o schermo spento: non si mette in pausa e non si cambia
+     stream, perché il browser rifiuterebbe l’autoplay del nuovo flusso. */
+  if (document.hidden || SR.bg){
+    SR.pendingFail = true;
+    log("instabilità in background (" + why + "): tengo lo stream e riprovo", "w");
+    reviveSoon(true);
+    return;
+  }
+  clearWatchdog();
+  SR.switching = true;
+  try { if (S.hls) { S.hls.destroy(); S.hls = null; } } catch(e){}
+  try { audio.pause(); audio.removeAttribute("src"); audio.load(); } catch(e){}
+  S.playing = false; renderPlayer();
+  SR.active = false;
+  SR.k++;
+  const st = fmt(S.idx), total = SR.tries.length;
+  if (SR.k >= total){
+    const hint = (st.http && location.protocol === "https:")
+      ? "Questa radio trasmette solo in HTTP: apri il file dal disco (file://) e non da una pagina web in HTTPS."
+      : "Nessuno degli stream risponde dalla tua rete. Controlla la connessione (o VPN e adblock) e premi Riprova.";
+    hardError("Stream non raggiungibile (" + why + "). " + hint);
+    return;
+  }
+  setStatus("buf", "Provo lo stream di riserva… (tentativo " + (SR.k + 1) + " di " + total + ")");
+  log("fallito (" + why + "): passo al tentativo " + (SR.k + 1) + " di " + total, "w");
+  nextTry(gen, 900);
+}
+
+/* ── eventi audio ─────────────────────────────────────── */
+audio.addEventListener("playing", () => {
+  SR.played = true; SR.switching = false; SR.revive = 0;
+  S.want = true; SR.pendingFail = false;
+  clearWatchdog();
+  S.playing = true; renderPlayer(); setStatus("live", "In diretta");
+});
+audio.addEventListener("waiting", () => { if (S.idx >= 0 && SR.active) setStatus("buf", "Buffering…"); });
+audio.addEventListener("pause", () => {
+  S.playing = false; renderPlayer();
+  if (S.idx >= 0 && !SR.active && !SR.switching && !S.want) setStatus("", "In pausa");
+  /* il sistema può mettere in pausa da solo quando la pagina va in background:
+     se non l’ha chiesto l’utente, si riprende */
+  if (!S.userPaused && S.want && !SR.switching) reviveSoon(false);
+});
+audio.addEventListener("stalled", () => {
+  if (document.hidden || SR.bg){ reviveSoon(false); return; }
+  if (SR.active) setStatus("buf", "Connessione instabile…");
+});
+audio.addEventListener("error", () => {
+  if (S.idx < 0) return;                       // errori dovuti alla pulizia della sorgente
+  const url = audio.currentSrc || audio.src || "";
+  const st = fmt(S.idx);
+  let why = "errore di rete";
+  if (mixedBlocked(url)) why = "contenuto http bloccato su pagina https";
+  else if (st.http && location.protocol === "https:") why = "solo http su pagina https";
+  if (document.hidden || SR.bg){
+    log("errore in background: riprovo lo stesso stream", "w");
+    SR.pendingFail = true; reviveSoon(true); return;
+  }
+  if (!SR.active) return;
+  log("errore audio su " + url, "e");
+  handleFail(SR.gen, why);
+});
+/* per una diretta la fine dello stream è un’interruzione, non una fine naturale */
+audio.addEventListener("ended", () => {
+  if (S.idx < 0 || S.userPaused) return;
+  if (document.hidden || SR.bg){ SR.pendingFail = true; reviveSoon(false); return; }
+  handleFail(SR.gen, "stream interrotto");
+});
+
+/* ── background: entrata e uscita dall’app ────────────── */
+document.addEventListener("visibilitychange", () => {
+  SR.bg = document.hidden;
+  if (document.hidden){
+    clearWatchdog();
+    log("app in background: la riproduzione prosegue, nessun cambio stream", "d");
+    return;
+  }
+  log("app di nuovo in primo piano", "d");
+  if (SR.pendingFail){ SR.pendingFail = false; SR.revive = 0; tune(S.idx); return; }
+  if (S.want && audio.paused) reviveSoon(true);
+  else if (SR.active && !SR.played) armWatchdog(SR.gen, audio.currentSrc || audio.src || "");
+});
+window.addEventListener("pagehide", () => { if (S.want){ SR.bg = true; clearWatchdog(); } });
+window.addEventListener("pageshow", () => { SR.bg = false; if (S.want && audio.paused) reviveSoon(true); });
+audio.volume = S.vol;
+
+/* ── elenco, card, categorie ──────────────────────────────────────────── */
+function visibleIndices(){
+  return STATIONS.map((st,i)=>i)
+    .filter(i => {
+      const st = STATIONS[i];
+      if (S.cat === "fav"){ if (!S.favs.has(st.n)) return false; }
+      else if (S.cat !== "all" && st.c !== S.cat) return false;
+      return matchStation(st, S.query);
+    })
+    .sort((a,b) => {
+      if (SORT === "pop"){
+        const ca = COUNTS[STATIONS[a].n] || 0, cb = COUNTS[STATIONS[b].n] || 0;
+        if (ca !== cb) return cb - ca;
+      }
+      return STATIONS[a].n.localeCompare(STATIONS[b].n, "it");
+    });
+}
+
+function stationCard(i){
+  const st = STATIONS[i];
+  const el = document.createElement("article");
+  el.className = "st"; el.dataset.i = i; el.tabIndex = 0;
+  el.setAttribute("role","button");
+  el.setAttribute("aria-label","Ascolta " + st.n);
+  el.innerHTML = `
+    <span class="onair"><i></i>in onda</span>
+    <button class="heart ${S.favs.has(st.n)?"on":""}" title="Preferiti" aria-label="Preferiti">
+      <svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.5-9A5.3 5.3 0 0 1 12 5.7 5.3 5.3 0 0 1 21.5 12c-2 4.4-9.5 9-9.5 9z"/></svg>
+    </button>
+    <div class="bx"><span class="mono"></span><img alt="" loading="lazy" class="off"></div>
+    <div class="nm"></div>
+    <div class="gn"></div>
+    <div class="kbps"></div>
+    <span class="tdot" data-st="${i}"></span>`;
+  el.querySelector(".nm").textContent = st.n;
+  el.querySelector(".gn").textContent = st.g;
+  el.querySelector(".kbps").textContent = (st.b || "").replace("· HLS"," · HLS") + (st.r ? " · " + st.r : "");
+  fillLogo(el.querySelector(".bx"), st, false);
+
+  el.querySelector(".heart").addEventListener("click", e => {
+    e.stopPropagation();
+    S.favs.has(st.n) ? S.favs.delete(st.n) : S.favs.add(st.n);
+    saveFavs();
+    const h = e.currentTarget;
+    h.classList.toggle("on", S.favs.has(st.n));
+    renderTabs();
+    if (S.cat === "fav") renderGrid(); else renderPlayer();
+  });
+  el.addEventListener("click", () => (S.idx === i && S.playing) ? pauseByUser() : tune(i));
+  el.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " "){ e.preventDefault(); tune(i); } });
+  return el;
+}
+
+function paintTestBadge(i){
+  const el = document.querySelector(`[data-st="${i}"]`);
+  const t = TEST[i];
+  if (!el) return;
+  el.className = "tdot" + (t ? " on " + (t.state === "run" ? "run" : t.state === "fail" ? "fail" : t.state === "maybe" ? "maybe" : "ok") : "");
+  el.title = t ? "test stream: " + t.msg : "";
+}
+
+function renderGrid(){
+  const idxs = visibleIndices();
+  const g = $("#grid"); g.innerHTML = "";
+  if (!idxs.length){
+    g.innerHTML = `<div class="empty">Nessuna stazione trovata${S.cat === "fav" ? " tra i preferiti" : ""}${S.query ? " per “" + S.query + "”" : ""}.</div>`;
+  } else {
+    idxs.forEach(i => { g.appendChild(stationCard(i)); paintTestBadge(i); });
+  }
+  const n = idxs.length;
+  $("#count").textContent = n === 1 ? "1 stazione" : n + " stazioni";
+  $("#hint").textContent = S.query ? "risultati per “" + S.query + "”" : (S.cat === "all" ? "" : CATS.find(c=>c[0]===S.cat)[1].toLowerCase());
+  $("#testVisible").textContent = "Testa le stazioni visibili (" + n + ")";
+  renderPlayer();
+}
+
+function renderTabs(){
+  const box = $("#tabs"); box.innerHTML = "";
+  const all = [["all","Tutte"], ...CATS];
+  all.forEach(([k,label]) => {
+    const b = document.createElement("button");
+    b.className = "tab" + (S.cat === k ? " on" : "");
+    b.textContent = label;
+    if (k === "fav" && S.favs.size){
+      const em = document.createElement("em"); em.textContent = S.favs.size; b.appendChild(em);
+    }
+    b.addEventListener("click", () => { S.cat = k; renderTabs(); renderGrid(); window.scrollTo({top:0,behavior:"smooth"}); });
+    box.appendChild(b);
+  });
+}
+
+function renderRecents(){
+  const sec = $("#recentSect"), box = $("#recents");
+  if (!S.recents.length){ sec.style.display = "none"; return; }
+  sec.style.display = "block"; box.innerHTML = "";
+  S.recents.forEach(i => {
+    const st = STATIONS[i]; if (!st) return;
+    const b = document.createElement("button");
+    b.dataset.i = i; b.textContent = st.n;
+    b.addEventListener("click", () => tune(i));
+    box.appendChild(b);
+  });
+}
+
+/* ── diagnostica: prova tutti gli stream dal browser ──── */
+let TESTING = false, TEST_CTRL = null;
+let AUTO_TEST = false;    // il test automatico non deve disturbare l’ascolto
+
+async function probeUrl(url, timeoutMs){
+  if (mixedBlocked(url)) return { ok: false, msg: "bloccato dal browser: contenuto http su pagina https" };
+  const t0 = Date.now();
+  const fetchTimeout = async (mode) => {
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), timeoutMs);
+    try { return { res: await fetch(url, { signal: ctrl.signal, cache: "no-store", mode }), ms: Date.now() - t0 }; }
+    finally { clearTimeout(tid); }
+  };
+  const needsCors = isHlsUrl(url);
+  try {
+    const { res } = await fetchTimeout("cors");
+    if (res.type === "opaque") return { ok: true, maybe: true, msg: "risponde (verifica limitata)" };
+    if (!res.ok){
+      try { if (res.body) res.body.cancel(); } catch(e){}
+      return { ok: false, msg: "il server risponde con errore HTTP " + res.status };
+    }
+    try { const rd = res.body && res.body.getReader(); if (rd){ await rd.read(); rd.cancel(); } } catch(e){}
+    return { ok: true, msg: "risponde in " + (Date.now() - t0) + " ms" };
+  } catch(e1){
+    if (e1 && e1.name === "AbortError") return { ok: false, msg: "nessuna risposta entro " + Math.round(timeoutMs / 1000) + " s" };
+    try {
+      const { res, ms } = await fetchTimeout("no-cors");
+      if (needsCors) return { ok: false, maybe: true, ms, msg: "raggiungibile ma senza permesso CORS: su Chrome e Firefox desktop l’HLS può non partire (Safari e Android vanno)" };
+      return { ok: true, maybe: true, ms, msg: "raggiungibile in " + ms + " ms" };
+    } catch(e2){
+      if (e2 && e2.name === "AbortError") return { ok: false, msg: "nessuna risposta entro " + Math.round(timeoutMs / 1000) + " s" };
+      return { ok: false, msg: "irraggiungibile dal browser: rete, VPN, adblock o server giù" };
+    }
+  }
+}
+
+async function testStation(i, timeoutMs){
+  const st = fmt(i);
+  TEST[i] = { state: "run", msg: "test in corso…" }; paintTestBadge(i);
+  const urls = urlsFor(st);
+  let best = null;
+  for (let k = 0; k < urls.length; k++){
+    if (!TESTING) break;
+    const r = await probeUrl(urls[k], timeoutMs);
+    if (r.ok){ best = { k, r }; break; }
+    TEST[i] = { state: "run", msg: r.msg }; paintTestBadge(i);
+  }
+  if (!best){
+    TEST[i] = { state: "fail", msg: (TEST[i] && TEST[i].msg) || "nessuna risposta" };
+    log(st.n + " — " + TEST[i].msg, "e"); paintTestBadge(i);
+    return false;
+  }
+  TEST[i] = { state: best.r.maybe ? "maybe" : "ok",
+              msg: (best.k === 0 ? "stream principale: " : "solo la riserva " + best.k + ": ") + best.r.msg };
+  log(st.n + " — " + TEST[i].msg, best.r.maybe ? "w" : "s");
+  paintTestBadge(i);
+  return true;
+}
+
+async function testList(idxs, timeoutMs = 9000, conc = 4){
+  if (TESTING || !idxs.length) return;
+  TESTING = true;
+  $("#testStop").disabled = false;
+  $("#testVisible").disabled = true; $("#testAll").disabled = true;
+  log("inizio il test di " + idxs.length + " stazioni", "d");
+  const res = { ok: 0, maybe: 0, fail: 0 };
+  let p = 0;
+  const worker = async () => {
+    while (TESTING && p < idxs.length){
+      const i = idxs[p++];
+      const good = await testStation(i, timeoutMs);
+      const t = TEST[i];
+      if (good) (t.state === "ok" ? res.ok++ : res.maybe++); else res.fail++;
+      updateSummary(res, p, idxs.length);
+    }
+  };
+  await Promise.all(Array.from({ length: conc }, worker));
+  TESTING = false; AUTO_TEST = false;
+  $("#testStop").disabled = true;
+  $("#testVisible").disabled = false; $("#testAll").disabled = false;
+  log("test terminato", "d");
+  updateSummary(res, p, idxs.length, true);
+}
+function updateSummary(r, done, total, finished){
+  $("#sum").innerHTML = "Test " + (finished ? "completato" : "in corso") + ": <b>" + r.ok + " ok</b> · " +
+    r.maybe + " da verificare · <i>" + r.fail + " non raggiungibili</i> — " + done + "/" + total + " controllate.";
+}
+
+/* ── banner (anteprima senza rete, offline) ───────────────────────────── */
+function refreshBanner(){
+  const b = $("#banner");
+  let inFrame = false;
+  try { inFrame = window.self !== window.top; } catch(e){ inFrame = true; }
+  if (navigator.onLine === false){
+    b.className = "banner show";
+    b.innerHTML = "<strong>Nessuna connessione a internet.</strong> Il player c’è, ma le stazioni non possono partire finché la connessione non torna.";
+    return;
+  }
+  if (inFrame){
+    b.className = "banner show";
+    b.innerHTML = "<strong>Questa è un’anteprima dentro un riquadro, e il riquadro non ha accesso alla rete:</strong> le radio non possono suonare qui. " +
+                  "<ol><li>scarica il file <code>radio-italiane.html</code>;</li><li>aprilo con doppio clic, si apre nel browser;</li>" +
+                  "<li>scegli una stazione e premi play.</li></ol> Qui dentro vedrai sempre “stream non raggiungibile”: è un limite dell’anteprima, non delle radio.";
+    return;
+  }
+  b.className = "banner"; b.innerHTML = "";
+}
+window.addEventListener("online", () => { log("connessione tornata", "s"); refreshBanner(); });
+window.addEventListener("offline", () => { log("connessione assente", "e"); refreshBanner(); });
+
+/* ── controlli ────────────────────────────────────────────────────────── */
+function toggle(){
+  if (S.idx < 0){ tune(visibleIndices()[0] || 0); return; }
+  if (S.playing || (S.want && !audio.paused)) pauseByUser();
+  else { S.want = true; S.userPaused = false; SR.gM = true; startPlay(SR.gen); }
+}
+function step(delta){
+  const list = visibleIndices();
+  if (!list.length) return;
+  const pos = list.indexOf(S.idx);
+  tune(list[pos === -1 ? 0 : (pos + delta + list.length) % list.length]);
+}
+function randomStation(){
+  const list = visibleIndices();
+  if (!list.length) return;
+  let r = Math.floor(Math.random() * list.length);
+  if (list.length > 1 && list[r] === S.idx) r = (r + 1) % list.length;
+  tune(list[r]);
+}
+$("#play").addEventListener("click", toggle);
+$("#prev").addEventListener("click", () => step(-1));
+$("#next").addEventListener("click", () => step(1));
+$("#rand").addEventListener("click", randomStation);
+$("#retry").addEventListener("click", () => { S.idx < 0 ? tune(visibleIndices()[0] || 0) : tune(S.idx); });
+$("#openlive").addEventListener("click", () => {
+  if (S.idx < 0) return;
+  const url = (S.hls && S.hls.url) || audio.currentSrc || audio.src || fmt(S.idx).u;
+  log("apertura stream in nuova scheda: " + url, "d");
+  window.open(url, "_blank", "noopener");
+});
+$("#mute").addEventListener("click", () => {
+  S.muted = !S.muted; audio.muted = S.muted;
+  $("#mute").style.color = S.muted ? "#ff9c9c" : "";
+});
+$("#vol").addEventListener("input", e => {
+  S.vol = e.target.value / 100; audio.volume = S.vol; audio.muted = false; S.muted = false;
+  $("#mute").style.color = ""; saveVol();
+});
+$("#fav").addEventListener("click", () => {
+  if (S.idx < 0) return;
+  const st = fmt(S.idx);
+  S.favs.has(st.n) ? S.favs.delete(st.n) : S.favs.add(st.n);
+  saveFavs(); renderTabs(); renderGrid();
+});
+$("#q").addEventListener("input", e => { S.query = e.target.value; renderGrid(); });
+$("#sortAZ").addEventListener("click", () => { SORT = "az"; $("#sortAZ").classList.add("on"); $("#sortPop").classList.remove("on"); renderGrid(); });
+$("#sortPop").addEventListener("click", () => { SORT = "pop"; $("#sortPop").classList.add("on"); $("#sortAZ").classList.remove("on"); renderGrid(); });
+
+/* ── spegnimento automatico ───────────────────────────────────────────── */
+$("#sleep").addEventListener("change", e => {
+  const m = +e.target.value;
+  S.sleepAt = m ? Date.now() + m * 60000 : 0;
+  if (!m) $("#timerinfo").textContent = "";
+  else log("spegnimento automatico fra " + m + " minuti", "d");
+});
+setInterval(() => {
+  if (!S.sleepAt) return;
+  const left = S.sleepAt - Date.now();
+  if (left <= 0){ audio.pause(); S.sleepAt = 0; $("#sleep").value = "0"; $("#timerinfo").textContent = ""; setStatus("", "Timer scaduto, riproduzione fermata"); return; }
+  const mm = Math.floor(left / 60000), ss = Math.floor(left % 60000 / 1000);
+  $("#timerinfo").textContent = "spegne tra " + mm + ":" + String(ss).padStart(2, "0");
+}, 1000);
+
+/* ── diagnostica: pulsanti ────────────────────────────────────────────── */
+$("#testVisible").addEventListener("click", () => testList(visibleIndices()));
+$("#testAll").addEventListener("click", () => testList(STATIONS.map((s,i) => i)));
+$("#testStop").addEventListener("click", () => { TESTING = false; log("test interrotto", "w"); });
+$("#copyDiag").addEventListener("click", async () => {
+  const txt = "Radio Italiane — diagnostica · " + new Date().toLocaleString("it-IT") + "\n" +
+    "pagina: " + location.href + " (" + location.protocol + ")" +
+    " · in iframe: " + (window.self !== window.top) + " · online: " + navigator.onLine + "\n" +
+    "browser: " + navigator.userAgent + "\n" +
+    "HLS nativo: " + (audio.canPlayType("application/vnd.apple.mpegurl") || "no") + " · hls.js: " + (window.Hls ? "sì" : "no") + "\n\n" +
+    LOG.map(l => "[" + l.t + "] " + l.msg).join("\n");
+  try { await navigator.clipboard.writeText(txt); $("#copyDiag").textContent = "Copiato"; }
+  catch(e){ $("#copyDiag").textContent = "Copia non riuscita"; }
+  setTimeout(() => { $("#copyDiag").textContent = "Copia il log"; }, 2200);
+});
+
+document.addEventListener("keydown", e => {
+  const tag = (e.target.tagName || "").toLowerCase();
+  if (tag === "input" || tag === "select" || tag === "textarea"){ if (e.key === "Escape") e.target.blur(); return; }
+  if (e.code === "Space"){ e.preventDefault(); toggle(); }
+  else if (e.key === "ArrowRight") step(1);
+  else if (e.key === "ArrowLeft") step(-1);
+  else if (e.key === "/"){ e.preventDefault(); $("#q").focus(); }
+  else if (e.key.toLowerCase() === "m") $("#mute").click();
+  else if (e.key.toLowerCase() === "r") randomStation();
+  else if (e.key.toLowerCase() === "f" && S.idx >= 0) $("#fav").click();
+});
+
+/* ── avvio ────────────────────────────────────────────────────────────── */
+(function init(){
+  log("Radio Italiane · 180 stazioni · pagina " + (isLocalPage() ? "aperta dal disco (file://)" : location.protocol + "//" + location.host), "d");
+  const v = parseFloat(localStorage.getItem(KEY_VOL) || "");
+  if (!isNaN(v)) S.vol = Math.min(1, Math.max(0, v));
+  $("#vol").value = Math.round(S.vol * 100); audio.volume = S.vol;
+  renderTabs(); renderGrid(); renderRecents(); refreshBanner();
+  const last = parseInt(localStorage.getItem(KEY_LAST) || "-1", 10);
+  if (last >= 0 && last < STATIONS.length){ S.idx = last; renderPlayer(); setStatus("", "Pronta: " + fmt(last).n); }
+  else setStatus("", "Scegli una stazione e premi play");
+  renderPlayer();
+  setupMediaSession();
+  /* il test automatico parte solo se non stiamo già ascoltando e la pagina è in primo piano */
+  const canAutoTest = () => !TESTING && !S.playing && !S.want && !document.hidden && navigator.onLine !== false;
+  if (canAutoTest() && window.self === window.top){
+    setTimeout(() => { if (canAutoTest()){ AUTO_TEST = true; testList(visibleIndices(), 8000, 3); } }, 2500);
+  }
+})();
+</script>
+</body>
+</html>
